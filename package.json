@@ -1,0 +1,21 @@
+{
+  "name": "sittax-token-ui-tests",
+  "version": "1.0.0",
+  "description": "Sittax Token - Testes E2E da tela de Grupos",
+  "main": "index.ts",
+  "scripts": {
+    "test": "npx cypress open",
+    "test:run": "npx cypress run",
+    "test:grupos": "npx cypress run --spec 'cypress/e2e/Grupos/**/*.cy.ts'"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "cypress": "^14.5.4",
+    "cypress-multi-reporters": "^2.0.5",
+    "mocha-junit-reporter": "^2.2.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
