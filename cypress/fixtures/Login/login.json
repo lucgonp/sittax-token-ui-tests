@@ -1,0 +1,13 @@
+{
+    "validUser": {
+        "email": "nofeko9237@kingcq.com",
+        "password": "12345678",
+        "nomeExibicao": "nofeko9237@kingcq.com",
+        "perfil": "MASTER",
+        "empresa": "Bruno e Juan Contábil Ltda"
+    },
+    "invalidUser": {
+        "email": "usuario-invalido@email.com",
+        "password": "senhaErrada123"
+    }
+}

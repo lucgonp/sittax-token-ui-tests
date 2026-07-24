@@ -1,0 +1,44 @@
+{
+    "pageTitle": "Grupos",
+    "searchPlaceholder": "Digite um termo para buscar",
+    "cadastrarButtonText": "Cadastrar grupo",
+    "tabelaColunas": {
+        "nomeDoGrupo": "Nome do grupo",
+        "usuarios": "Usuários",
+        "certificados": "Certificados",
+        "acoes": "Ações"
+    },
+    "acoes": {
+        "editar": "Editar",
+        "duplicar": "Duplicar grupo",
+        "excluir": "Excluir"
+    },
+    "modalExcluir": {
+        "titulo": "Excluir grupo",
+        "mensagem": "Tem certeza que deseja excluir o grupo",
+        "mensagemFinal": "? Esta ação não pode ser desfeita.",
+        "botaoCancelar": "Não, Cancelar",
+        "botaoConfirmar": "Sim, quero continuar"
+    },
+    "cadastrarGrupo": {
+        "titulo": "Cadastrar grupo",
+        "secaoInfo": "Informações gerais",
+        "labelNome": "Nome",
+        "placeholderNome": "Digite o nome do grupo",
+        "secaoCertificados": "Adicionar certificados",
+        "searchCertificadosPlaceholder": "Digite um certificado para buscar",
+        "colunaNome": "Nome",
+        "colunaCNPJ": "CNPJ",
+        "botaoCancelar": "Cancelar",
+        "botaoConfirmar": "Confirmar"
+    },
+    "paginacao": {
+        "resultadosPorPagina": "Resultados por página:",
+        "itensPorPaginaPadrao": 10,
+        "totalResultadosTexto": "resultados"
+    },
+    "grupoTeste": {
+        "nome": "Grupo Cypress Automação",
+        "nomeEditado": "Grupo Cypress Automação - Editado"
+    }
+}
