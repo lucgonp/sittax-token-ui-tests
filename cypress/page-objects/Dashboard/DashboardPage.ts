@@ -26,11 +26,11 @@ export const DashboardPage = {
     /** Rótulo atual do filtro de vencimento */
     getLabelFiltroVencimento: () => cy.get('#nd-cert-venc-label', { timeout: 15000 }),
 
-    /** Botão de Ações da primeira linha de certificados */
-    getBotaoAcoes: () => cy.get('[data-dt-action-trigger]', { timeout: 15000 }).first(),
+    /** Botão de Ações de uma linha da tabela de certificados */
+    getBotaoAcoes: (index = 0) => cy.get('table.nd-table [data-dt-action-trigger]', { timeout: 15000 }).eq(index),
 
-    /** Menu de ações aberto (renderizado no body via position:fixed) */
-    getMenuAcoes: () => cy.get('.nd-table-action-menu.nd-pop--open', { timeout: 15000 }),
+    /** Painel/Menu de ações aberto */
+    getMenuAcoes: () => cy.get('.nd-table-action-menu, [data-dt-action-panel]', { timeout: 15000 }),
 
     // ══════════════════════════════════════════════
     //  AÇÕES E VALIDAÇÕES
@@ -43,6 +43,43 @@ export const DashboardPage = {
                 cy.get('body').contains('button', '✕').click({ force: true });
             }
         });
+    },
+
+    /** Fecha qualquer modal/dialog/drawer aberto na tela */
+    fecharModalAbertoSeExistir: () => {
+        cy.get('body').then(($body) => {
+            if ($body.find('.fly-dialog, [role="dialog"], .modal, .nd-drawer').length > 0) {
+                cy.get('body').then(($b) => {
+                    if ($b.find('button:contains("✕")').length > 0) {
+                        cy.get('button:contains("✕")').each(($el) => {
+                            cy.wrap($el).click({ force: true });
+                        });
+                    } else if ($b.find('button:contains("Fechar")').length > 0) {
+                        cy.get('button:contains("Fechar")').first().click({ force: true });
+                    } else if ($b.find('button:contains("Cancelar")').length > 0) {
+                        cy.get('button:contains("Cancelar")').first().click({ force: true });
+                    } else {
+                        cy.get('body').type('{esc}');
+                    }
+                });
+            }
+        });
+    },
+
+    /** Clica no botão Ações da linha indicada */
+    abrirMenuAcoes: (rowIndex = 0) => {
+        cy.get('table.nd-table', { timeout: 15000 }).should('be.visible');
+        DashboardPage.getBotaoAcoes(rowIndex).should('be.visible').click({ force: true });
+    },
+
+    /** Clica em uma das opções do menu Ações (show, procuracoes, acessos, share, sharePartner, edit, delete) */
+    clicarAcaoPorKey: (actionKey: string) => {
+        // O menu é clonado para o body ao abrir; escopa no menu aberto (.nd-pop--open)
+        // e usa .last() caso clones antigos tenham ficado no DOM entre tentativas.
+        cy.get('.nd-table-action-menu.nd-pop--open', { timeout: 15000 })
+            .last()
+            .find(`[data-dt-action-key="${actionKey}"]`)
+            .click({ force: true });
     },
 
     /** Valida os 3 cards estatísticos principais dentro do container .nd-stats-grid */

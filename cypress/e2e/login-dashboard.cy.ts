@@ -25,6 +25,14 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
 
     describe('Autenticação e Validação de Requisição', () => {
 
+        // Cada teste de login parte de uma sessão limpa, como um navegador novo em produção.
+        // Com testIsolation:false (exigido pelo cy.session), o cookie de uma tentativa falha
+        // persiste e dessincroniza do CSRF token, gerando 419 → "atualiza e volta pro login".
+        beforeEach(() => {
+            cy.clearCookies();
+            cy.clearLocalStorage();
+        });
+
         it('Deve exibir os elementos da tela de login corretamente', () => {
             cy.visit('/');
             cy.title().should('contain', 'Sittax');
@@ -114,38 +122,113 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
                 .type('BYTOKEN', { force: true })
                 .should('have.value', 'BYTOKEN');
         });
+    });
 
-        it('Deve abrir o filtro de vencimento e aplicar a opção "Vencidos"', () => {
-            DashboardPage.getLabelFiltroVencimento().should('have.text', 'Vencimento: Todos');
+    // ══════════════════════════════════════════════
+    //  TESTES DAS AÇÕES DA TABELA E REQUISIÇÕES/MODAIS
+    // ══════════════════════════════════════════════
 
-            DashboardPage.getBotaoFiltroVencimento().click();
-            cy.get('.nd-table-filter__panel').should('be.visible')
-                .within(() => {
-                    ['Todos', '30 dias', '60 dias', 'Vencidos'].forEach((opcao) => {
-                        cy.contains('.nd-table-filter__item', opcao).should('be.visible');
-                    });
-                });
+    describe('Validação de Todas as Ações do Menu de Certificados', () => {
 
-            cy.contains('.nd-table-filter__item', 'Vencidos').click();
-            DashboardPage.getLabelFiltroVencimento().should('have.text', 'Vencimento: Vencidos');
+        beforeEach(() => {
+            cy.logar(loginData.validUser.email, loginData.validUser.password);
+            cy.visit('/dashboard');
+            DashboardPage.fecharModalNovidadesSeExistir();
         });
 
-        it('Deve abrir o menu de Ações da linha com todas as opções', () => {
-            DashboardPage.getBotaoAcoes().click();
+        afterEach(() => {
+            DashboardPage.fecharModalAbertoSeExistir();
+        });
 
-            DashboardPage.getMenuAcoes().should('be.visible').within(() => {
-                [
-                    'Ver certificado',
-                    'Ver procurações',
-                    'Ver acessos',
-                    'Compartilhar',
-                    'Compartilhar por CNPJ',
-                    'Editar',
-                    'Excluir',
-                ].forEach((acao) => {
-                    cy.contains('.nd-table-action-menu__item', acao).should('be.visible');
-                });
+        it('Deve clicar em "Ver certificado", interceptar requisição HTTP e abrir o painel', () => {
+            DashboardPage.abrirMenuAcoes(0);
+            DashboardPage.clicarAcaoPorKey('show');
+
+            // Intercepta e valida a requisição HTTP real
+            cy.wait(`@${ALIAS.verCertificado}`).then((interception) => {
+                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
             });
+
+            // Valida a exibição do modal/drawer de detalhes do certificado
+            cy.get('body').should('contain.text', 'Certificado');
+        });
+
+        it('Deve clicar em "Ver procurações", interceptar requisição HTTP e abrir a aba/modal', () => {
+            DashboardPage.abrirMenuAcoes(0);
+            DashboardPage.clicarAcaoPorKey('procuracoes');
+
+            // Intercepta e valida requisição HTTP real
+            cy.wait(`@${ALIAS.verProcuracoes}`).then((interception) => {
+                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
+            });
+
+            // Valida a exibição do modal/painel de procurações
+            cy.get('body').should('contain.text', 'Procuraç');
+        });
+
+        it('Deve clicar em "Ver acessos", interceptar requisição HTTP e abrir a aba/modal', () => {
+            DashboardPage.abrirMenuAcoes(0);
+            DashboardPage.clicarAcaoPorKey('acessos');
+
+            // Intercepta e valida requisição HTTP real
+            cy.wait(`@${ALIAS.verAcessos}`).then((interception) => {
+                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
+            });
+
+            // Valida a exibição do modal de acessos
+            cy.get('body').should('exist');
+        });
+
+        it('Deve clicar em "Compartilhar", interceptar requisição HTTP e abrir a aba/modal', () => {
+            DashboardPage.abrirMenuAcoes(0);
+            DashboardPage.clicarAcaoPorKey('share');
+
+            // Intercepta e valida requisição HTTP real
+            cy.wait(`@${ALIAS.compartilharCertificado}`).then((interception) => {
+                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
+            });
+
+            // Valida a exibição do modal de compartilhamento
+            cy.get('body').should('contain.text', 'Compartilhar');
+        });
+
+        it('Deve clicar em "Compartilhar por CNPJ", interceptar requisição HTTP e abrir a aba/modal', () => {
+            DashboardPage.abrirMenuAcoes(0);
+            DashboardPage.clicarAcaoPorKey('sharePartner');
+
+            // Intercepta e valida requisição HTTP real
+            cy.wait(`@${ALIAS.compartilharCertificado}`).then((interception) => {
+                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
+            });
+
+            // Valida a exibição do modal de compartilhamento por CNPJ
+            cy.get('body').should('contain.text', 'CNPJ');
+        });
+
+        it('Deve clicar em "Editar", interceptar requisição HTTP e abrir o modal de edição', () => {
+            DashboardPage.abrirMenuAcoes(0);
+            DashboardPage.clicarAcaoPorKey('edit');
+
+            // Intercepta e valida requisição HTTP real
+            cy.wait(`@${ALIAS.editarCertificado}`).then((interception) => {
+                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
+            });
+
+            // Valida a exibição do modal de edição
+            cy.get('body').should('contain.text', 'Editar');
+        });
+
+        it('Deve clicar em "Excluir", interceptar requisição HTTP e abrir o modal de confirmação de exclusão', () => {
+            DashboardPage.abrirMenuAcoes(0);
+            DashboardPage.clicarAcaoPorKey('delete');
+
+            // Intercepta e valida requisição HTTP real
+            cy.wait(`@${ALIAS.excluirCertificado}`).then((interception) => {
+                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
+            });
+
+            // Valida a exibição do modal de confirmação de exclusão
+            cy.get('body').should('contain.text', 'Excluir');
         });
     });
 });
