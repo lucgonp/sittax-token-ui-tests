@@ -229,20 +229,18 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
             cy.get('body').should('contain.text', 'Editar');
         });
 
-        // SKIP: o clique em Excluir não dispara a requisição deleteForm interceptada sob o Cypress
-        // (confirmação client-side / modal afetado pela declaração dupla do app). Reativar quando
-        // o fluxo de exclusão for testável — validando o request real de deleteForm.
-        it.skip('Deve clicar em "Excluir", interceptar requisição HTTP e abrir o modal de confirmação de exclusão', () => {
+        it('Deve clicar em "Excluir" e abrir o modal de confirmação de exclusão (por CNPJ)', () => {
             DashboardPage.abrirMenuAcoes(0);
             DashboardPage.clicarAcaoPorKey('delete');
 
-            // Intercepta e valida requisição HTTP real
-            cy.wait(`@${ALIAS.excluirCertificado}`).then((interception) => {
-                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
+            // O clique NÃO dispara requisição: abre um modal client-side (.fly-cnpj-confirm)
+            // que exige digitar o CNPJ para liberar o botão de confirmação.
+            cy.get('.fly-cnpj-confirm', { timeout: 15000 }).should('be.visible').within(() => {
+                cy.get('.fly-cnpj-confirm__title').should('have.text', 'Atenção!');
+                cy.get('.fly-cnpj-confirm__input').should('be.visible');
+                // Botão de confirmar começa desabilitado até informar o CNPJ
+                cy.get('.fly-cnpj-confirm__confirm').should('be.disabled');
             });
-
-            // Valida a exibição do modal de confirmação de exclusão
-            cy.get('body').should('contain.text', 'Excluir');
         });
     });
 });
