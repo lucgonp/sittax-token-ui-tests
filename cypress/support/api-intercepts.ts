@@ -26,7 +26,9 @@ export const ALIAS = {
     excluirGrupo: 'excluirGrupo',
     buscarCertificados: 'buscarCertificados',
     buscarAgentes: 'buscarAgentes',
+    paginaLogin: 'paginaLogin',
     login: 'loginRequest',
+    recuperarSenha: 'recuperarSenhaRequest',
     dashboard: 'dashboardPage',
     verCertificado: 'verCertificadoRequest',
     verProcuracoes: 'verProcuracoesRequest',
@@ -132,7 +134,9 @@ export function setupGruposIntercepts(): void {
  */
 export function setupLoginIntercepts(): void {
     cy.intercept('POST', '**/login*').as(ALIAS.login);
+    cy.intercept('POST', '**/forgot-password*').as(ALIAS.recuperarSenha);
 }
+
 
 /**
  * Registra intercepts para as requisições da tela de Dashboard.
