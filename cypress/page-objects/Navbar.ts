@@ -51,5 +51,6 @@ export const Navbar = {
     dashboard: () => Navbar.irParaItem('Dashboard'),
     controle: (item: string) => Navbar.navegar('Controle', item),
     cadastros: (item: string) => Navbar.navegar('Cadastros', item),
+    relatorios: (item: string) => Navbar.navegar('Relatórios', item),
     utilitarios: (item: string) => Navbar.navegar('Utilitários', item),
 };

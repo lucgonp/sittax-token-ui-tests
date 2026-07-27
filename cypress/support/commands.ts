@@ -140,5 +140,24 @@ Cypress.Commands.add('navegarParaUsuarios', () => {
         .and('contain', 'Usuários');
 });
 
+/**
+ * Navega até um relatório específico via menu da Navbar (Relatórios -> item).
+ * Remove o atributo target="_blank" para manter a navegação no mesmo contexto do Cypress.
+ */
+Cypress.Commands.add('navegarParaRelatorio', (nomeRelatorio: string) => {
+    Navbar.get()
+        .contains('.nd-nav-dropdown button.nd-navbar__item', 'Relatórios')
+        .closest('.nd-nav-dropdown')
+        .as('relatorioDropdown');
+
+    cy.get('@relatorioDropdown').trigger('mouseenter');
+    cy.get('@relatorioDropdown')
+        .find('.nd-nav-dropdown__panel')
+        .contains('a.nd-nav-dropdown__link', nomeRelatorio.trim())
+        .invoke('removeAttr', 'target')
+        .click({ force: true });
+});
+
+
 
 

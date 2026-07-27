@@ -1,0 +1,16 @@
+{
+    "buscaAcoes": {
+        "termoExistente": "BYTOKEN",
+        "termoInexistente": "AcaoInexistente99999XYZ"
+    },
+    "titulos": {
+        "certificados": "Relação de Certificados",
+        "certificadosLista": "Relação de Certificados",
+        "certificadosDesconhecidos": "Relação de Certificados Desconhecidos",
+        "certificadosVencimento": "Relação de Certificados",
+        "certificadosGrupos": "Relação de Certificados por Grupos",
+        "certificadosUsuarios": "Relação de Certificados por Usuários",
+        "procuracoes": "Relação de Procurações",
+        "acoes": "Ações"
+    }
+}

@@ -106,6 +106,17 @@ export const ALIAS = {
     editarUsuario: 'editarUsuarioRequest',
     atualizarUsuario: 'atualizarUsuarioRequest',
     excluirUsuario: 'excluirUsuarioRequest',
+
+    // Relatórios
+    relatorioCertificados: 'relatorioCertificadosRequest',
+    relatorioCertificadosLista: 'relatorioCertificadosListaRequest',
+    relatorioCertificadosDesconhecidos: 'relatorioCertificadosDesconhecidosRequest',
+    relatorioCertificadosVencimento: 'relatorioCertificadosVencimentoRequest',
+    relatorioCertificadosGrupos: 'relatorioCertificadosGruposRequest',
+    relatorioCertificadosUsuarios: 'relatorioCertificadosUsuariosRequest',
+    relatorioProcuracoes: 'relatorioProcuracoesRequest',
+    relatorioAcoes: 'relatorioAcoesRequest',
+    buscarAcoes: 'buscarAcoesRequest',
 } as const;
 
 /**
@@ -311,6 +322,22 @@ export function setupUsuariosIntercepts(): void {
     // DELETE/POST - Excluir usuário
     cy.intercept({ url: '**/usuarios/*' }).as(ALIAS.excluirUsuario);
 }
+
+/**
+ * Registra intercepts para todas as requisições do módulo de Relatórios.
+ */
+export function setupRelatoriosIntercepts(): void {
+    cy.intercept('GET', '**/relatorios/certificados').as(ALIAS.relatorioCertificados);
+    cy.intercept('GET', '**/relatorios/certificados-lista*').as(ALIAS.relatorioCertificadosLista);
+    cy.intercept('GET', '**/relatorios/certificados-desconhecidos*').as(ALIAS.relatorioCertificadosDesconhecidos);
+    cy.intercept('GET', '**/relatorios/certificados-vencimentos*').as(ALIAS.relatorioCertificadosVencimento);
+    cy.intercept('GET', '**/relatorios/certificados-grupos*').as(ALIAS.relatorioCertificadosGrupos);
+    cy.intercept('GET', '**/relatorios/certificados-usuarios*').as(ALIAS.relatorioCertificadosUsuarios);
+    cy.intercept('GET', '**/relatorios/procuracoes*').as(ALIAS.relatorioProcuracoes);
+    cy.intercept('GET', '**/acoes/nova-area*').as(ALIAS.relatorioAcoes);
+    cy.intercept('POST', '**/acoes/nova-area/search*').as(ALIAS.buscarAcoes);
+}
+
 
 
 
