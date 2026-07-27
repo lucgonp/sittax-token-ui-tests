@@ -153,8 +153,11 @@ export function setupCertificadosIntercepts(): void {
     cy.intercept('POST', '**/controle/certificados/nova-area/search*').as(ALIAS.listarCertificados);
     // GET - Tela de cadastro/upload
     cy.intercept('GET', '**/controle/certificados/create*').as(ALIAS.criarCertificado);
-    // POST - Submeter upload de certificado
-    cy.intercept('POST', '**/controle/certificados/create*').as(ALIAS.salvarCertificado);
+    // POST - Submeter upload de certificado.
+    // O submit real NÃO vai para /create: a tela posta em `/controle/certificados`
+    // e responde 204 (confirmado inspecionando o tráfego). O `?` garante que só casa
+    // a raiz exata, sem colidir com `/nova-area/search`.
+    cy.intercept('POST', /\/controle\/certificados(\?.*)?$/).as(ALIAS.salvarCertificado);
     // GET - Tela de edição
     cy.intercept('GET', '**/controle/certificados/update/*').as(ALIAS.editarCertificadoForm);
     // POST - Submeter edição de certificado

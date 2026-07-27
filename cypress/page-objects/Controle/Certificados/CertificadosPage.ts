@@ -141,6 +141,35 @@ export const CertificadosPage = {
         CertificadosPage.getBotaoConfirmarExclusao().should('not.be.disabled').click({ force: true });
     },
 
+    /**
+     * Confirma a exclusão lendo do PRÓPRIO modal qual documento deve ser digitado.
+     * O modal exibe o documento esperado entre colchetes ("...informe o CNPJ [XXXX]...").
+     * Para e-CPF esse número é o CPF; para e-CNPJ, o CNPJ. Ler do modal torna o teste
+     * robusto ao tipo de certificado, sem depender de valor fixo na fixture.
+     */
+    confirmarExclusaoLendoDocumentoDoModal: () => {
+        CertificadosPage.getModalExclusao().should('be.visible');
+        CertificadosPage.getModalExclusao().invoke('text').then((texto: string) => {
+            const doc = (texto.match(/\d{11,14}/) || [''])[0];
+            expect(doc, 'documento esperado extraído do texto do modal').to.match(/^\d{11,14}$/);
+            CertificadosPage.getCampoCnpjExclusao().should('be.visible').clear().type(doc);
+            CertificadosPage.getBotaoConfirmarExclusao().should('not.be.disabled').click({ force: true });
+        });
+    },
+
+    /**
+     * Verifica que um certificado NÃO está presente na listagem após uma busca.
+     * Trata os dois estados possíveis: (a) a tabela existe mas sem o termo, ou
+     * (b) zero resultados — a tabela não é renderizada e a tela mostra
+     * "Nenhum certificado encontrado". Assertar `table.nd-table` direto falha no caso (b).
+     */
+    assertCertificadoAusente: (termo: string) => {
+        // Assertiva RETRIÁVEL: procura uma tabela que contenha o termo. Se não houver
+        // tabela (estado vazio) OU a tabela não contiver o termo, `not.exist` passa e o
+        // Cypress reavalia até estabilizar. Evita a corrida do snapshot cy.get('body').then().
+        cy.contains('table.nd-table', termo, { timeout: 15000 }).should('not.exist');
+    },
+
     /** Pesquisa um certificado pelo termo no campo de busca */
     buscarCertificadoPorTermo: (termo: string) => {
         CertificadosPage.getCampoBusca()

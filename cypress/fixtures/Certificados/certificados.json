@@ -1,11 +1,14 @@
 {
     "certificadoTeste": {
         "arquivo": "Certificados/certificado_teste.pfx",
-        "nomeOriginal": "ESCRITA FINA SERVICOS CONTABEIS S_S LTDA_40229155000119_ValidoAte_22092026_senha1234.pfx",
+        "nomeArquivoOriginal": "ESCRITA FINA SERVICOS CONTABEIS S_S LTDA_40229155000119_ValidoAte_22092026_senha1234.pfx",
         "senha": "1234",
-        "cnpj": "40.229.155/0001-19",
-        "cnpjSemFormatacao": "40229155000119",
-        "razaoSocial": "ESCRITA FINA SERVICOS CONTABEIS",
+        "_obs": "O NOME DO ARQUIVO é enganoso. O conteúdo real do .pfx (validado via openssl) é um e-CPF A1 de MARIO SCHLICKMANN, CPF 317.634.569-00, CNPJ vinculado 19.963.579/0001-16, válido até 22/09/2026. A listagem exibe 'MARIO SCHLICKMANN | <apelido>'.",
+        "razaoSocial": "MARIO SCHLICKMANN",
+        "cpf": "317.634.569-00",
+        "cpfSemFormatacao": "31763456900",
+        "cnpjVinculado": "19.963.579/0001-16",
+        "cnpjSemFormatacao": "19963579000116",
         "apelido": "CertTesteAuto"
     }
 }
