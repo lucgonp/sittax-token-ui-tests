@@ -101,3 +101,14 @@ Cypress.Commands.add('navegarParaGrupos', () => {
         .and('contain', 'Grupos');
 });
 
+/**
+ * Navega até a página de listagem de Regras via menu da Navbar (Controle -> Regras).
+ */
+Cypress.Commands.add('navegarParaRegras', () => {
+    Navbar.controle('Regras');
+    cy.get('.nd-title-bar .h1, .nd-title-bar__title, .nd-title-bar__left [role="heading"], h1', { timeout: 15000 })
+        .should('be.visible')
+        .and('contain', 'Regras');
+});
+
+

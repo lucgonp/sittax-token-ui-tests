@@ -3,7 +3,7 @@
 import { RegrasPage } from '../../../page-objects/Controle/Regras/RegrasPage';
 import { setupLoginIntercepts, setupRegrasIntercepts, ALIAS } from '../../../support/api-intercepts';
 
-describe('Controle - Tela de Regras (/controle/regras)', () => {
+describe('Controle - Tela de Regras (/controle/regras) via Interface do Navegador', () => {
 
     let loginData: any;
     let regrasFixture: any;
@@ -20,30 +20,28 @@ describe('Controle - Tela de Regras (/controle/regras)', () => {
     beforeEach(() => {
         setupLoginIntercepts();
         setupRegrasIntercepts();
-        cy.logar(loginData.validUser.email, loginData.validUser.password);
+        cy.loginPadrao();
+        cy.navegarParaRegras();
     });
 
     // ══════════════════════════════════════════════
     //  1. CARREGAMENTO E ELEMENTOS DA TELA
     // ══════════════════════════════════════════════
 
-    describe('Exibição da Página e Elementos Iniciais', () => {
+    describe('Exibição da Página e Elementos Iniciais via Navegador', () => {
 
-        it('Deve carregar a rota /controle/regras com status HTTP 200', () => {
-            cy.visit('/controle/regras');
-            cy.wait(`@${ALIAS.paginaRegras}`).its('response.statusCode').should('be.oneOf', [200, 304]);
+        it('Deve carregar a rota /controle/regras com status HTTP 200 via menu de navegação', () => {
+            cy.url().should('include', '/controle/regras');
             RegrasPage.getTitulo().should('be.visible').and('contain.text', 'Regras');
         });
 
         it('Deve renderizar os elementos da barra de ações (Cadastrar regra, Busca e Ordenação)', () => {
-            cy.visit('/controle/regras');
             RegrasPage.getBotaoCadastrarRegra().should('be.visible');
             RegrasPage.getCampoBusca().should('be.visible');
             RegrasPage.getBotaoFiltroOrdenacao().should('be.visible');
         });
 
         it('Deve exibir a tabela de regras com as colunas esperadas', () => {
-            cy.visit('/controle/regras');
             RegrasPage.getTabela().should('be.visible');
             cy.get('table.nd-table thead tr').within(() => {
                 cy.contains('th', 'Nome').should('be.visible');
@@ -59,25 +57,21 @@ describe('Controle - Tela de Regras (/controle/regras)', () => {
     //  2. BUSCA, FILTROS E REQUISIÇÕES DE API
     // ══════════════════════════════════════════════
 
-    describe('Busca, Ordenação e Interceptação de API', () => {
-
-        beforeEach(() => {
-            cy.visit('/controle/regras');
-        });
+    describe('Busca, Ordenação e Interceptação de API via Interface', () => {
 
         it('Deve pesquisar por nome da regra no campo de busca e interceptar POST /search', () => {
             RegrasPage.buscarPorTermo(regrasFixture.busca.termoExistente);
             cy.wait(`@${ALIAS.listarRegras}`, { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
         });
 
-        it('Deve abrir o menu de ordenação e selecionar uma opção de ordenação', () => {
+        it('Deve abrir o menu de ordenação e selecionar uma opção de ordenação clicando na interface', () => {
             RegrasPage.getBotaoFiltroOrdenacao().click({ force: true });
             cy.get('.nd-table-filter__panel').should('be.visible');
             cy.get('.nd-table-filter__item').contains('Nome').click({ force: true });
             cy.wait(`@${ALIAS.listarRegras}`, { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
         });
 
-        it('Deve clicar em "Cadastrar regra", interceptar GET /controle/regras/create e carregar o formulário', () => {
+        it('Deve clicar no botão "Cadastrar regra", interceptar GET /controle/regras/create e carregar o formulário', () => {
             RegrasPage.clicarCadastrarRegra();
             cy.wait(`@${ALIAS.criarRegra}`, { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
             cy.url().should('include', '/controle/regras/create');
@@ -90,11 +84,7 @@ describe('Controle - Tela de Regras (/controle/regras)', () => {
     //  3. AÇÕES DA TABELA DE REGRAS
     // ══════════════════════════════════════════════
 
-    describe('Validação das Ações do Menu da Tabela', () => {
-
-        beforeEach(() => {
-            cy.visit('/controle/regras');
-        });
+    describe('Validação das Ações do Menu da Tabela via Navegador', () => {
 
         it('Deve abrir o menu Ações e clicar em "Editar", interceptando GET /controle/regras/*/edit', () => {
             cy.get('body').then(($body) => {
@@ -116,7 +106,7 @@ describe('Controle - Tela de Regras (/controle/regras)', () => {
                 if ($body.find('table.nd-table tbody tr').length > 0) {
                     RegrasPage.clicarExcluirNaLinha(0);
 
-                    // Se exibir modal de confirmação de exclusão, confirma
+                    // Se exibir modal de confirmação de exclusão, confirma na interface
                     cy.get('body').then(($b) => {
                         if ($b.find('.fly-dialog, [role="dialog"], .modal').length > 0) {
                             cy.contains('button', /Confirmar|Sim|Excluir/i).first().click({ force: true });
@@ -136,13 +126,13 @@ describe('Controle - Tela de Regras (/controle/regras)', () => {
     });
 
     // ══════════════════════════════════════════════
-    //  4. OPERAÇÕES DO CRUD DE REGRAS
+    //  4. OPERAÇÕES DO CRUD VIA BROWSER
     // ══════════════════════════════════════════════
 
-    describe('Operações do CRUD Completo de Regras', () => {
+    describe('Operações do CRUD Completo de Regras via Interface', () => {
 
-        it('C - Create: Deve preencher e submeter o formulário de nova regra', () => {
-            cy.visit('/controle/regras/create');
+        it('C - Create: Deve navegar até o formulário, preencher e submeter nova regra via browser', () => {
+            RegrasPage.clicarCadastrarRegra();
             cy.wait(`@${ALIAS.criarRegra}`);
 
             RegrasPage.preencherFormulario(
@@ -150,7 +140,7 @@ describe('Controle - Tela de Regras (/controle/regras)', () => {
                 regrasFixture.novaRegra.dominio
             );
 
-            // Seleciona um agente da lista se houver
+            // Seleciona um agente da lista via checkbox
             cy.get('body').then(($body) => {
                 if ($body.find('input[name="usuarios[]"]').length > 0) {
                     cy.get('input[name="usuarios[]"]').first().check({ force: true });
@@ -166,9 +156,7 @@ describe('Controle - Tela de Regras (/controle/regras)', () => {
             });
         });
 
-        it('R - Read: Deve validar que a tabela de regras ou o estado vazio é exibido', () => {
-            cy.visit('/controle/regras');
-            cy.wait(`@${ALIAS.paginaRegras}`);
+        it('R - Read: Deve validar que a tabela de regras ou o estado vazio é exibido ao navegar', () => {
             cy.get('.nd-table-container, table.nd-table', { timeout: 15000 }).should('be.visible');
             cy.get('body').should(($body) => {
                 const hasRows = $body.find('table.nd-table tbody tr').length > 0;
@@ -177,8 +165,7 @@ describe('Controle - Tela de Regras (/controle/regras)', () => {
             });
         });
 
-        it('U - Update: Deve acessar a edição de uma regra e salvar as alterações', () => {
-            cy.visit('/controle/regras');
+        it('U - Update: Deve navegar para a edição de uma regra e salvar as alterações via browser', () => {
             cy.get('body').then(($body) => {
                 if ($body.find('table.nd-table tbody tr').length > 0) {
                     RegrasPage.clicarEditarNaLinha(0);
@@ -198,8 +185,7 @@ describe('Controle - Tela de Regras (/controle/regras)', () => {
             });
         });
 
-        it('D - Delete: Deve acionar exclusão de regra e tratar resposta do backend', () => {
-            cy.visit('/controle/regras');
+        it('D - Delete: Deve acionar exclusão de regra na interface e tratar resposta do backend', () => {
             cy.get('body').then(($body) => {
                 if ($body.find('table.nd-table tbody tr').length > 0) {
                     RegrasPage.clicarExcluirNaLinha(0);
@@ -222,7 +208,6 @@ describe('Controle - Tela de Regras (/controle/regras)', () => {
         });
 
         it('Read / Empty State: Deve exibir a mensagem de lista vazia ao buscar um termo inexistente', () => {
-            cy.visit('/controle/regras');
             RegrasPage.buscarPorTermo(regrasFixture.busca.termoInexistente);
             cy.wait(`@${ALIAS.listarRegras}`);
             RegrasPage.getTabelaVaziaContainer().should('contain.text', 'Nenhuma regra encontrada');
