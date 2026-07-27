@@ -30,6 +30,12 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
                 .should('contain', 'Grupos');
         },
         {
+            // Revalida a sessão restaurada do cache: se o cookie de auth expirou,
+            // /dashboard redireciona para /login e o cy.session refaz o setup.
+            validate() {
+                cy.visit('/dashboard');
+                cy.url().should('not.include', '/login');
+            },
             cacheAcrossSpecs: true,
         },
     );
