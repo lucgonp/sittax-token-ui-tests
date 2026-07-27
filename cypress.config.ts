@@ -14,6 +14,20 @@ export default defineConfig({
   },
   e2e: {
     setupNodeEvents(on, config) {
+      on('task', {
+        // Limpa a pasta de downloads (usado antes de validar exports .xlsx)
+        deleteDownloads() {
+          const fs = require('fs');
+          const path = require('path');
+          const dir = config.downloadsFolder || 'cypress/downloads';
+          if (fs.existsSync(dir)) {
+            for (const f of fs.readdirSync(dir)) {
+              fs.rmSync(path.join(dir, f), { force: true });
+            }
+          }
+          return null;
+        },
+      });
       return config;
     },
     defaultCommandTimeout: 15000,

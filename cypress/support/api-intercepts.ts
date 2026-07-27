@@ -192,8 +192,9 @@ export function setupImportacoesIntercepts(): void {
     cy.intercept('GET', '**/controle/importacoes').as(ALIAS.paginaImportacoes);
     // POST - Listagem, busca e paginação
     cy.intercept('POST', '**/controle/importacoes/nova-area/search*').as(ALIAS.listarImportacoes);
-    // GET - Exportar relatório/detalhes de uma importação
-    cy.intercept('GET', '**/controle/importacoes/export/*').as(ALIAS.exportarImportacao);
+    // NOTA: o "Exportar" da tela de importações é gerado no CLIENTE (blob .xlsx),
+    // sem request HTTP — não há endpoint para interceptar. A validação é feita pelo
+    // arquivo baixado (ver spec importacoes.cy.ts). Por isso não há intercept de export aqui.
     // DELETE - Excluir importação
     cy.intercept({ method: 'DELETE', url: '**/controle/importacoes/*' }).as(ALIAS.excluirImportacao);
 }

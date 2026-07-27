@@ -96,11 +96,21 @@ describe('Controle - Tela de Importações (/controle/importacoes)', () => {
             ImportacoesPage.fecharModalAbertoSeExistir();
         });
 
-        it('Deve clicar em "Exportar", interceptar requisição GET /export/*', () => {
+        it('Deve clicar em "Exportar" e baixar o relatório importacao.xlsx', () => {
+            // O export é gerado no CLIENTE (blob) — não há request HTTP a interceptar
+            // (comprovado: um intercept amplo em **/controle/importacoes/** não captura nada,
+            // mas o arquivo é baixado). Portanto validamos o ARQUIVO baixado.
+            const arquivo = `${Cypress.config('downloadsFolder')}/importacao.xlsx`;
+            cy.task('deleteDownloads');
+
             ImportacoesPage.abrirMenuAcoes(0);
             ImportacoesPage.clicarAcaoPorTexto('Exportar');
 
-            cy.wait(`@${ALIAS.exportarImportacao}`).its('response.statusCode').should('be.oneOf', [200, 304]);
+            cy.readFile(arquivo, 'binary', { timeout: 20000 }).should((conteudo) => {
+                expect(conteudo.length, 'tamanho do .xlsx').to.be.greaterThan(0);
+                // Assinatura ZIP ("PK") — garante um .xlsx real, não um arquivo vazio/HTML de erro
+                expect(conteudo.slice(0, 2), 'assinatura ZIP do xlsx').to.eq('PK');
+            });
         });
 
         it('Deve clicar em "Excluir" e abrir o modal de confirmação de exclusão', () => {

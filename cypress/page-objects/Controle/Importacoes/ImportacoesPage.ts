@@ -35,8 +35,13 @@ export const ImportacoesPage = {
     /** Botão fechar painel de filtros */
     getBotaoFecharFiltro: () => cy.get('button.filter-panel-close', { timeout: 15000 }),
 
-    /** Tabela principal de importações */
-    getTabelaImportacoes: () => cy.get('table.nd-table', { timeout: 15000 }),
+    /**
+     * Tabela principal de importações. A tela renderiza VÁRIAS `table.nd-table`
+     * (a listagem + mini-tabelas de contadores por linha), então `table.nd-table`
+     * casa 11 elementos e quebra `.within()`. A listagem principal é a que tem a
+     * classe modificadora `--importacoes`.
+     */
+    getTabelaImportacoes: () => cy.get('table.nd-table--importacoes', { timeout: 15000 }).first(),
 
     /** Botão Ações de uma linha da tabela */
     getBotaoAcoes: (index = 0) => cy.get('table.nd-table [data-dt-action-trigger], table.nd-table button.nd-actions-btn', { timeout: 15000 }).eq(index),
@@ -48,8 +53,12 @@ export const ImportacoesPage = {
     //  SELETORES DE MODAL
     // ══════════════════════════════════════════════
 
-    /** Container do modal de confirmação de exclusão */
-    getModalExclusao: () => cy.get('.fly-alert, .fly-dialog, [role="dialog"]', { timeout: 15000 }),
+    /**
+     * Container do modal de confirmação de exclusão. O seletor genérico
+     * `.fly-alert, .fly-dialog` casa 2 elementos (o dialog externo + o alert interno)
+     * e quebra `.within()`. O container único é o dialog ATIVO (`.fly-dialog--active`).
+     */
+    getModalExclusao: () => cy.get('.fly-dialog--active', { timeout: 15000 }),
 
     /** Botão "Sim, excluir" / Confirmar exclusão */
     getBotaoConfirmarExclusao: () => cy.get('button.fly-alert__btn--confirm, button:contains("Sim, excluir"), button:contains("Excluir")', { timeout: 15000 }),
