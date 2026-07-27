@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
-import { GruposPage } from '../../page-objects/Grupos/GruposPage';
-import { setupGruposIntercepts, ALIAS } from '../../support/api-intercepts';
+import { GruposPage } from '../../../page-objects/Cadastros/Grupos/GruposPage';
+import { setupGruposIntercepts, ALIAS } from '../../../support/api-intercepts';
 
 /**
  * Testes de exibição e estrutura da página de Grupos (/grupos).

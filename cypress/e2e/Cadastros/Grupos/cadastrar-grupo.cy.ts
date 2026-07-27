@@ -1,8 +1,8 @@
 /// <reference types="cypress" />
 
-import { GruposPage } from '../../page-objects/Grupos/GruposPage';
-import { CadastrarGrupoPage } from '../../page-objects/Grupos/CadastrarGrupoPage';
-import { setupGruposIntercepts, ALIAS } from '../../support/api-intercepts';
+import { GruposPage } from '../../../page-objects/Cadastros/Grupos/GruposPage';
+import { CadastrarGrupoPage } from '../../../page-objects/Cadastros/Grupos/CadastrarGrupoPage';
+import { setupGruposIntercepts, ALIAS } from '../../../support/api-intercepts';
 
 /**
  * Testes da tela de Cadastrar Grupo (/grupos/nova-area/create).
