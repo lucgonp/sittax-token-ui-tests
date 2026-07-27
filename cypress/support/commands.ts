@@ -5,6 +5,29 @@ import { Navbar } from '../page-objects/Navbar';
 import { setupLoginIntercepts } from './api-intercepts';
 
 /**
+ * Fecha o modal "Novidade!" que aparece na dashboard logo após o login e cobre a
+ * navbar (impedindo a navegação pelo menu). Como ele renderiza de forma assíncrona,
+ * fazemos um poll curto: assim que aparecer, fechamos; se não aparecer, seguimos.
+ */
+function fecharModalNovidades(tentativas = 4): void {
+    cy.get('body').then(($b) => {
+        const aberto = $b.find(':contains("Novidade!")').filter(':visible').length > 0;
+        if (aberto) {
+            cy.get('body').contains('button', '✕').click({ force: true });
+            cy.get('body').should(($b2) => {
+                expect(
+                    $b2.find(':contains("Novidade!")').filter(':visible').length,
+                    'modal Novidade! fechado',
+                ).to.eq(0);
+            });
+        } else if (tentativas > 0) {
+            cy.wait(250);
+            fecharModalNovidades(tentativas - 1);
+        }
+    });
+}
+
+/**
  * Realiza login na aplicação Sittax Token.
  *
  * Usa cy.session() para cachear a sessão autenticada — o login por UI acontece
@@ -46,6 +69,8 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
     // (ver page-objects/Navbar.ts) em vez de usar cy.visit() com a rota.
     cy.visit('/dashboard');
     cy.get('nav.nd-navbar', { timeout: 20000 }).should('be.visible');
+    // Fecha o modal de novidades (se surgir) para não bloquear a navegação pelo menu.
+    fecharModalNovidades();
 });
 
 /**
