@@ -65,6 +65,12 @@ export const ALIAS = {
     excluirCertificadoForm: 'excluirCertificadoFormRequest',
     excluirCertificadoPost: 'excluirCertificadoPostRequest',
     exportarCertificados: 'exportarCertificadosRequest',
+
+    // Importações (Controle)
+    paginaImportacoes: 'paginaImportacoes',
+    listarImportacoes: 'listarImportacoesRequest',
+    exportarImportacao: 'exportarImportacaoRequest',
+    excluirImportacao: 'excluirImportacaoRequest',
 } as const;
 
 /**
@@ -153,8 +159,11 @@ export function setupCertificadosIntercepts(): void {
     cy.intercept('POST', '**/controle/certificados/nova-area/search*').as(ALIAS.listarCertificados);
     // GET - Tela de cadastro/upload
     cy.intercept('GET', '**/controle/certificados/create*').as(ALIAS.criarCertificado);
-    // POST - Submeter upload de certificado
-    cy.intercept('POST', '**/controle/certificados/create*').as(ALIAS.salvarCertificado);
+    // POST - Submeter upload de certificado.
+    // O submit real NÃO vai para /create: a tela posta em `/controle/certificados`
+    // e responde 204 (confirmado inspecionando o tráfego). O `?` garante que só casa
+    // a raiz exata, sem colidir com `/nova-area/search`.
+    cy.intercept('POST', /\/controle\/certificados(\?.*)?$/).as(ALIAS.salvarCertificado);
     // GET - Tela de edição
     cy.intercept('GET', '**/controle/certificados/update/*').as(ALIAS.editarCertificadoForm);
     // POST - Submeter edição de certificado
@@ -173,4 +182,19 @@ export function setupCertificadosIntercepts(): void {
     cy.intercept('DELETE', /\/controle\/certificados\/\d+/).as(ALIAS.excluirCertificadoPost);
     // GET - Exportar certificados
     cy.intercept('GET', '**/controle/certificados/export*').as(ALIAS.exportarCertificados);
+}
+
+/**
+ * Registra intercepts para as requisições da tela de Importações (/controle/importacoes).
+ */
+export function setupImportacoesIntercepts(): void {
+    // GET - Página HTML de importações
+    cy.intercept('GET', '**/controle/importacoes').as(ALIAS.paginaImportacoes);
+    // POST - Listagem, busca e paginação
+    cy.intercept('POST', '**/controle/importacoes/nova-area/search*').as(ALIAS.listarImportacoes);
+    // NOTA: o "Exportar" da tela de importações é gerado no CLIENTE (blob .xlsx),
+    // sem request HTTP — não há endpoint para interceptar. A validação é feita pelo
+    // arquivo baixado (ver spec importacoes.cy.ts). Por isso não há intercept de export aqui.
+    // DELETE - Excluir importação
+    cy.intercept({ method: 'DELETE', url: '**/controle/importacoes/*' }).as(ALIAS.excluirImportacao);
 }

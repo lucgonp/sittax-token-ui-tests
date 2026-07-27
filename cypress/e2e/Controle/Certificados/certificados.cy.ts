@@ -176,8 +176,14 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
             // Submete o formulário
             CertificadosPage.clicarConfirmar();
 
-            // Aguarda o redirecionamento de volta para a listagem
-            cy.url({ timeout: 30000 }).should('include', '/controle/certificados');
+            // Prova que o upload REALMENTE persistiu: o submit posta em /controle/certificados
+            // e responde 2xx (204). Assertar só a URL era falso-positivo (também bate em /create).
+            cy.wait(`@${ALIAS.salvarCertificado}`, { timeout: 30000 })
+                .its('response.statusCode')
+                .should('be.oneOf', [200, 201, 204, 302]);
+
+            // E confirma o retorno para a listagem
+            cy.url({ timeout: 30000 }).should('match', /\/controle\/certificados\/?$/);
         });
 
         it('Deve localizar o certificado importado na listagem via busca', () => {
@@ -210,8 +216,8 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
             CertificadosPage.getModalExclusao().should('be.visible');
             CertificadosPage.getTituloModalExclusao().should('have.text', 'Atenção!');
 
-            // Digita o CNPJ para liberar o botão de exclusão e confirma
-            CertificadosPage.confirmarExclusaoPorCnpj(certData.cnpjSemFormatacao);
+            // Lê do modal qual documento (CPF do e-CPF, aqui) libera o botão e confirma
+            CertificadosPage.confirmarExclusaoLendoDocumentoDoModal();
 
             // Aguarda a conclusão da exclusão
             cy.url({ timeout: 20000 }).should('include', '/controle/certificados');
@@ -220,8 +226,8 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
             CertificadosPage.buscarCertificadoPorTermo(certData.razaoSocial);
             cy.wait(`@${ALIAS.listarCertificados}`);
 
-            // Verifica que o certificado não aparece mais na tabela
-            CertificadosPage.getTabelaCertificados().should('not.contain.text', certData.razaoSocial);
+            // Verifica que o certificado não aparece mais na listagem (trata estado vazio)
+            CertificadosPage.assertCertificadoAusente(certData.razaoSocial);
         });
     });
 });
