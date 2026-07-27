@@ -1,0 +1,21 @@
+{
+    "novaRegra": {
+        "nome": "Regra Teste E2E Cypress",
+        "dominio": "https://ecac.receita.fazenda.gov.br/teste",
+        "descricao": "Regra criada automaticamente pelos testes E2E do Cypress"
+    },
+    "regraEdicao": {
+        "nome": "Regra Teste Editada E2E",
+        "dominio": "https://ecac.receita.fazenda.gov.br/editado"
+    },
+    "busca": {
+        "termoExistente": "Bloqueio",
+        "termoSecundario": "Receita",
+        "termoInexistente": "RegraInexistente99999XYZ"
+    },
+    "textos": {
+        "tituloPagina": "Regras",
+        "botaoCadastrar": "Cadastrar regra",
+        "tabelaVazia": "Nenhuma regra encontrada"
+    }
+}

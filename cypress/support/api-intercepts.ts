@@ -86,6 +86,15 @@ export const ALIAS = {
     listarMonitoramentos: 'listarMonitoramentosRequest',
     exportarMonitoramentos: 'exportarMonitoramentosRequest',
     verVideoMonitoramento: 'verVideoMonitoramentoRequest',
+
+    // Regras (Controle)
+    paginaRegras: 'paginaRegras',
+    listarRegras: 'listarRegrasRequest',
+    criarRegra: 'criarRegraRequest',
+    salvarRegra: 'salvarRegraRequest',
+    editarRegra: 'editarRegraRequest',
+    atualizarRegra: 'atualizarRegraRequest',
+    excluirRegra: 'excluirRegraRequest',
 } as const;
 
 /**
@@ -247,4 +256,26 @@ export function setupMonitoramentosIntercepts(): void {
     // GET - Ver vídeo/gravação de monitoramento
     cy.intercept('GET', '**/controle/monitoramentos/video/*').as(ALIAS.verVideoMonitoramento);
 }
+
+/**
+ * Registra intercepts para as requisições da tela de Regras (/controle/regras).
+ */
+export function setupRegrasIntercepts(): void {
+    // GET - Página HTML de regras
+    cy.intercept('GET', '**/controle/regras*').as(ALIAS.paginaRegras);
+    // POST - Listagem, busca, ordenação e paginação
+    cy.intercept('POST', '**/controle/regras/nova-area/search*').as(ALIAS.listarRegras);
+    // GET - Tela de cadastro de regra
+    cy.intercept('GET', '**/controle/regras/create*').as(ALIAS.criarRegra);
+    // POST - Salvar nova regra
+    cy.intercept('POST', '**/controle/regras/create*').as(ALIAS.salvarRegra);
+    cy.intercept('POST', '**/controle/regras').as(ALIAS.salvarRegra);
+    // GET - Carregar regra para edição
+    cy.intercept('GET', '**/controle/regras/*/edit*').as(ALIAS.editarRegra);
+    // PUT/POST - Atualizar regra existente
+    cy.intercept({ url: '**/controle/regras/*' }).as(ALIAS.atualizarRegra);
+    // DELETE/POST - Excluir regra
+    cy.intercept({ url: '**/controle/regras/*' }).as(ALIAS.excluirRegra);
+}
+
 
