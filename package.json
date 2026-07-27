@@ -6,7 +6,8 @@
     "test": "npx cypress open",
     "test:run": "npx cypress run",
     "test:grupos": "npx cypress run --spec 'cypress/e2e/Grupos/**/*.cy.ts'",
-    "test:login-dashboard": "npx cypress run --spec 'cypress/e2e/login-dashboard.cy.ts'"
+    "test:login-dashboard": "npx cypress run --spec 'cypress/e2e/login-dashboard.cy.ts'",
+    "test:agentes": "npx cypress run --spec 'cypress/e2e/Controle/Agentes/agentes.cy.ts'"
   },
   "author": "",
   "license": "MIT",

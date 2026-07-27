@@ -34,6 +34,19 @@ export const ALIAS = {
     compartilharCertificado: 'compartilharCertificadoRequest',
     editarCertificado: 'editarCertificadoRequest',
     excluirCertificado: 'excluirCertificadoRequest',
+
+    // Agentes
+    paginaAgentes: 'paginaAgentes',
+    listarAgentes: 'listarAgentesRequest',
+    criarAgente: 'criarAgenteRequest',
+    editarAgente: 'editarAgenteRequest',
+    verGruposAgente: 'verGruposAgenteRequest',
+    verCertificadosAgente: 'verCertificadosAgenteRequest',
+    verProcuracoesAgente: 'verProcuracoesAgenteRequest',
+    verSitesAgente: 'verSitesAgenteRequest',
+    alterarSenhaAgente: 'alterarSenhaAgenteRequest',
+    excluirAgenteForm: 'excluirAgenteFormRequest',
+    exportarAgentes: 'exportarAgentesRequest',
 } as const;
 
 /**
@@ -87,5 +100,23 @@ export function setupDashboardIntercepts(): void {
     cy.intercept('GET', '**/controle/certificados/update/*').as(ALIAS.editarCertificado);
     cy.intercept('GET', '**/controle/certificados/deleteForm/*').as(ALIAS.excluirCertificado);
 }
+
+/**
+ * Registra intercepts para as requisições da tela de Agentes (/usuarios/agentes/nova-area).
+ */
+export function setupAgentesIntercepts(): void {
+    cy.intercept('GET', '**/usuarios/agentes/nova-area*').as(ALIAS.paginaAgentes);
+    cy.intercept('POST', '**/usuarios/agentes/nova-area/search*').as(ALIAS.listarAgentes);
+    cy.intercept('GET', '**/usuarios/agentes/create*').as(ALIAS.criarAgente);
+    cy.intercept('GET', '**/usuarios/agentes/edit/*').as(ALIAS.editarAgente);
+    cy.intercept('GET', /\/usuarios\/agentes\/.*\/grupos/).as(ALIAS.verGruposAgente);
+    cy.intercept('GET', /\/usuarios\/agentes\/.*\/certificados/).as(ALIAS.verCertificadosAgente);
+    cy.intercept('GET', /\/usuarios\/agentes\/.*\/procuracoes/).as(ALIAS.verProcuracoesAgente);
+    cy.intercept('GET', /\/usuarios\/agentes\/.*\/sites/).as(ALIAS.verSitesAgente);
+    cy.intercept('GET', /\/usuarios\/agentes\/.*\/password/).as(ALIAS.alterarSenhaAgente);
+    cy.intercept('GET', /\/usuarios\/agentes\/.*\/deleteForm/).as(ALIAS.excluirAgenteForm);
+    cy.intercept('GET', '**/usuarios/agentes/export*').as(ALIAS.exportarAgentes);
+}
+
 
 
