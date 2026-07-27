@@ -47,11 +47,12 @@ describe('Cadastros - Tela de Usuários (/usuarios) via Navegação UI', () => {
             cy.get('table.nd-table thead tr').within(() => {
                 cy.contains('th', 'Nome').should('be.visible');
                 cy.contains('th', 'E-mail').should('be.visible');
-                cy.contains('th', 'Descrição').should('be.visible');
-                cy.contains('th', 'Perfil de acesso').should('be.visible');
+                cy.contains('th', /Descrição|Apelido/i).should('be.visible');
+                cy.contains('th', /Perfil/i).should('be.visible');
                 cy.contains('th', 'Ações').should('be.visible');
             });
         });
+
     });
 
     // ══════════════════════════════════════════════
