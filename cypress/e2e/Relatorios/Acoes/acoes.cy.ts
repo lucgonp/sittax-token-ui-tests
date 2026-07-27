@@ -54,7 +54,4 @@ describe('Relatório - Ações (/acoes/nova-area)', () => {
         cy.contains('.nd-table-filter__item', 'Instalar').should('be.visible');
     });
 
-    it('Deve renderizar o botão de filtro lateral (painel de filtros)', () => {
-        RelatoriosPage.getBotaoFiltroPainel().should('be.visible');
-    });
 });

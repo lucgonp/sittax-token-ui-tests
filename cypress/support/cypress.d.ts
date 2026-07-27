@@ -23,5 +23,16 @@ declare namespace Cypress {
      * Navega até a página de Regras (Controle → Regras) via navbar.
      */
     navegarParaRegras(): Chainable<void>;
+
+    /**
+     * Navega até a página de Usuários (Cadastros → Usuários) via navbar.
+     */
+    navegarParaUsuarios(): Chainable<void>;
+
+    /**
+     * Navega até um relatório específico (Relatórios → item) via navbar.
+     * @param nomeRelatorio - Nome do relatório conforme aparece no menu.
+     */
+    navegarParaRelatorio(nomeRelatorio: string): Chainable<void>;
   }
 }

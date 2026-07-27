@@ -55,7 +55,7 @@ describe('Relatório - Certificados por Vencimento (/relatorios/certificados-ven
     });
 
     it('Deve exibir datas de validade no formato DD/MM/AAAA em cada linha', () => {
-        cy.get('table tbody tr').first().within(() => {
+        cy.get('table tbody tr').filter(':has(th)').first().within(() => {
             cy.get('td').last().invoke('text').then((text) => {
                 expect(text.trim()).to.match(/\d{2}\/\d{2}\/\d{4}/);
             });
