@@ -244,6 +244,10 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
             AgentesPage.buscarAgentePorNome(agenteNome);
             cy.wait(`@${ALIAS.listarAgentes}`);
 
+            // Aguarda a tabela estabilizar com o resultado esperado
+            AgentesPage.getTabelaAgentes().should('contain.text', agenteNome);
+            cy.wait(1500);
+
             // Abre o menu Ações e clica em Editar
             AgentesPage.abrirMenuAcoes(0);
             AgentesPage.clicarAcaoPorTexto('Editar');
@@ -274,6 +278,7 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
 
             // Valida que o agente ainda está na tabela antes de excluir
             AgentesPage.getTabelaAgentes().should('contain.text', agenteNome);
+            cy.wait(1500);
 
             // Abre o menu Ações e clica em Excluir
             AgentesPage.abrirMenuAcoes(0);

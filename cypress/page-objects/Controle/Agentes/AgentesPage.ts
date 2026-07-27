@@ -138,7 +138,12 @@ export const AgentesPage = {
 
     /** Pesquisa um agente pelo nome no campo de busca da listagem */
     buscarAgentePorNome: (nome: string) => {
-        AgentesPage.getCampoBusca().clear().type(`${nome}{enter}`, { force: true });
+        // Usa {selectall} em vez de clear() para evitar disparar
+        // uma requisição POST /search intermediária que re-renderiza a tabela
+        AgentesPage.getCampoBusca()
+            .should('be.visible')
+            .focus()
+            .type(`{selectall}${nome}{enter}`, { force: true });
     },
 
     /** Fecha modal ou drawer aberto na tela se existir */
