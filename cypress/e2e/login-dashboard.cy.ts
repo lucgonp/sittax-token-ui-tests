@@ -1,0 +1,151 @@
+/// <reference types="cypress" />
+
+import { LoginPage } from '../page-objects/Login/LoginPage';
+import { DashboardPage } from '../page-objects/Dashboard/DashboardPage';
+import { setupLoginIntercepts, setupDashboardIntercepts, ALIAS } from '../support/api-intercepts';
+
+describe('Sittax Token - Testes de Login e Dashboard', () => {
+
+    let loginData: any;
+
+    before(() => {
+        cy.fixture('Login/login.json').then((data) => {
+            loginData = data;
+        });
+    });
+
+    beforeEach(() => {
+        setupLoginIntercepts();
+        setupDashboardIntercepts();
+    });
+
+    // ══════════════════════════════════════════════
+    //  TESTES DE LOGIN E INTERCEPTAÇÃO DE REQUISIÇÃO
+    // ══════════════════════════════════════════════
+
+    describe('Autenticação e Validação de Requisição', () => {
+
+        it('Deve exibir os elementos da tela de login corretamente', () => {
+            cy.visit('/');
+            cy.title().should('contain', 'Sittax');
+            LoginPage.getCampoEmail().should('be.visible');
+            LoginPage.getCampoSenha().should('be.visible');
+            LoginPage.getBotaoEntrar().should('be.visible');
+        });
+
+        it('Deve recusar login com credenciais inválidas e exibir mensagem de erro', () => {
+            cy.visit('/');
+            LoginPage.preencherESubmeter(loginData.invalidUser.email, loginData.invalidUser.password);
+            
+            // Valida a mensagem de erro de autenticação no formulário
+            cy.contains('Email/Senha estão incorretos.').should('be.visible');
+            cy.url().should('not.include', '/dashboard');
+        });
+
+        it('Deve realizar login com sucesso via UI, interceptar POST /login e redirecionar para /dashboard', () => {
+            cy.visit('/');
+            LoginPage.preencherESubmeter(loginData.validUser.email, loginData.validUser.password);
+
+            // Valida interceptação da requisição POST de login (HTTP 200/302)
+            cy.wait(`@${ALIAS.login}`).then((interception) => {
+                expect(interception.response?.statusCode).to.be.oneOf([200, 302]);
+                expect(interception.request.body).to.include(encodeURIComponent(loginData.validUser.email));
+            });
+
+            // Valida redirecionamento para a rota protegida
+            cy.url({ timeout: 15000 }).should('include', '/dashboard');
+        });
+    });
+
+    // ══════════════════════════════════════════════
+    //  TESTES DA PRIMEIRA TELA DE DASHBOARD
+    // ══════════════════════════════════════════════
+
+    describe('Validação da Tela Principal (Dashboard)', () => {
+
+        beforeEach(() => {
+            cy.logar(loginData.validUser.email, loginData.validUser.password);
+            cy.visit('/dashboard');
+            DashboardPage.fecharModalNovidadesSeExistir();
+        });
+
+        it('Deve carregar a rota /dashboard com status HTTP 200', () => {
+            cy.wait(`@${ALIAS.dashboard}`).its('response.statusCode').should('eq', 200);
+        });
+
+        it('Deve exibir o título "Dashboard" na barra superior', () => {
+            DashboardPage.getTitulo().should('be.visible').and('have.text', 'Dashboard');
+        });
+
+        it('Deve exibir as informações do perfil do usuário e da empresa no cabeçalho', () => {
+            cy.get('.nd-navbar__right').within(() => {
+                cy.contains(loginData.validUser.email).should('be.visible');
+                cy.contains(loginData.validUser.perfil).should('be.visible');
+                cy.contains(loginData.validUser.empresa, { matchCase: false }).should('be.visible');
+            });
+        });
+
+        it('Deve exibir os cards de estatísticas (Certificados, Procurações e Agentes)', () => {
+            DashboardPage.validarCardsPrincipais();
+            
+            // Valida os rótulos de detalhes dentro do grid (.nd-stats-grid)
+            cy.get('.nd-stats-grid').within(() => {
+                cy.contains('.nd-stats-card__detail-label', 'Desconhecidos').should('be.visible');
+                cy.contains('.nd-stats-card__detail-label', 'Vencidos').should('be.visible');
+                cy.contains('.nd-stats-card__detail-label', 'A vencer').should('be.visible');
+                cy.contains('.nd-stats-card__detail-label', 'Ativos').should('be.visible');
+                cy.contains('.nd-stats-card__detail-label', 'Inativados').should('be.visible');
+            });
+        });
+
+        it('Deve renderizar a tabela de Certificados com as colunas esperadas', () => {
+            DashboardPage.getTabelaCertificados().within(() => {
+                cy.get('th.h5').contains('Razão social / Nome').should('be.visible');
+                cy.get('th.h5').contains('Origem').should('be.visible');
+                cy.get('th.h5').contains('Data de importação').should('be.visible');
+                cy.get('th.h5').contains('Validade').should('be.visible');
+                cy.get('th.h5').contains('Ações').should('be.visible');
+            });
+        });
+
+        it('Deve permitir interagir com o campo de busca de certificados (#nd-cert-search)', () => {
+            DashboardPage.getCampoBuscaCertificados()
+                .should('be.visible')
+                .type('BYTOKEN', { force: true })
+                .should('have.value', 'BYTOKEN');
+        });
+
+        it('Deve abrir o filtro de vencimento e aplicar a opção "Vencidos"', () => {
+            DashboardPage.getLabelFiltroVencimento().should('have.text', 'Vencimento: Todos');
+
+            DashboardPage.getBotaoFiltroVencimento().click();
+            cy.get('.nd-table-filter__panel').should('be.visible')
+                .within(() => {
+                    ['Todos', '30 dias', '60 dias', 'Vencidos'].forEach((opcao) => {
+                        cy.contains('.nd-table-filter__item', opcao).should('be.visible');
+                    });
+                });
+
+            cy.contains('.nd-table-filter__item', 'Vencidos').click();
+            DashboardPage.getLabelFiltroVencimento().should('have.text', 'Vencimento: Vencidos');
+        });
+
+        it('Deve abrir o menu de Ações da linha com todas as opções', () => {
+            DashboardPage.getBotaoAcoes().click();
+
+            DashboardPage.getMenuAcoes().should('be.visible').within(() => {
+                [
+                    'Ver certificado',
+                    'Ver procurações',
+                    'Ver acessos',
+                    'Compartilhar',
+                    'Compartilhar por CNPJ',
+                    'Editar',
+                    'Excluir',
+                ].forEach((acao) => {
+                    cy.contains('.nd-table-action-menu__item', acao).should('be.visible');
+                });
+            });
+        });
+    });
+});
