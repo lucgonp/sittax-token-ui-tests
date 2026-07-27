@@ -78,7 +78,12 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
         });
 
         it('Deve carregar a rota /dashboard com status HTTP 200', () => {
-            cy.wait(`@${ALIAS.dashboard}`).its('response.statusCode').should('eq', 200);
+            // Requisição própria e controlada: o alias @dashboardPage pode ter capturado o 302
+            // do validate()/recriação de sessão (visita /dashboard antes de reautenticar).
+            // Já autenticados pelo beforeEach, /dashboard responde 200 direto (sem redirect).
+            cy.request({ url: '/dashboard', followRedirect: false })
+                .its('status')
+                .should('eq', 200);
         });
 
         it('Deve exibir o título "Dashboard" na barra superior', () => {
