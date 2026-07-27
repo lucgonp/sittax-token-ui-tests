@@ -179,4 +179,122 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
             });
         });
     });
+
+    // ══════════════════════════════════════════════
+    //  CRUD COMPLETO: CRIAR → EDITAR → EXCLUIR
+    // ══════════════════════════════════════════════
+
+    describe('CRUD Completo de Agente (Criar → Editar → Excluir)', () => {
+
+        let agentesData: any;
+        const uniqueSuffix = Date.now();
+        let agenteNome: string;
+        let agenteEmail: string;
+
+        before(() => {
+            cy.fixture('Agentes/agentes.json').then((data) => {
+                agentesData = data;
+                agenteNome = agentesData.novoAgente.nome;
+                agenteEmail = `${agentesData.novoAgente.email}.${uniqueSuffix}@test.com`;
+            });
+        });
+
+        it('Deve cadastrar um novo agente preenchendo o formulário e submeter com sucesso', () => {
+            cy.visit('/usuarios/agentes/nova-area');
+            AgentesPage.getBotaoCadastrarAgente().click({ force: true });
+
+            cy.wait(`@${ALIAS.criarAgente}`).its('response.statusCode').should('be.oneOf', [200, 304]);
+
+            // Valida que o formulário de criação foi carregado
+            AgentesPage.getCampoNome().should('be.visible');
+            AgentesPage.getCampoEmail().should('be.visible');
+            AgentesPage.getCampoSenha().should('be.visible');
+            AgentesPage.getCampoApelido().should('be.visible');
+
+            // Preenche o formulário com os dados da fixture
+            AgentesPage.preencherFormularioCriar(
+                agenteNome,
+                agenteEmail,
+                agentesData.novoAgente.senha,
+                agentesData.novoAgente.apelido
+            );
+
+            // Submete o formulário
+            AgentesPage.clicarConfirmar();
+
+            // Aguarda o redirecionamento de volta para a listagem
+            cy.url({ timeout: 20000 }).should('include', '/usuarios/agentes');
+        });
+
+        it('Deve localizar o agente criado na listagem via busca', () => {
+            cy.visit('/usuarios/agentes/nova-area');
+
+            // Busca pelo nome do agente recém-criado
+            AgentesPage.buscarAgentePorNome(agenteNome);
+            cy.wait(`@${ALIAS.listarAgentes}`).its('response.statusCode').should('be.oneOf', [200, 304]);
+
+            // Valida que o agente aparece na tabela
+            AgentesPage.getTabelaAgentes().should('contain.text', agenteNome);
+        });
+
+        it('Deve editar o agente criado, alterar a descrição e salvar com sucesso', () => {
+            cy.visit('/usuarios/agentes/nova-area');
+
+            // Busca o agente criado
+            AgentesPage.buscarAgentePorNome(agenteNome);
+            cy.wait(`@${ALIAS.listarAgentes}`);
+
+            // Abre o menu Ações e clica em Editar
+            AgentesPage.abrirMenuAcoes(0);
+            AgentesPage.clicarAcaoPorTexto('Editar');
+
+            cy.wait(`@${ALIAS.editarAgente}`).its('response.statusCode').should('be.oneOf', [200, 304]);
+            cy.url().should('include', '/usuarios/agentes/edit/');
+
+            // Valida que os campos editáveis estão visíveis
+            AgentesPage.getCampoEmail().should('be.visible');
+            AgentesPage.getCampoApelido().should('be.visible');
+
+            // Altera a descrição do agente
+            AgentesPage.preencherFormularioEditar(agentesData.edicao.apelido);
+
+            // Submete as alterações
+            AgentesPage.clicarConfirmar();
+
+            // Aguarda o redirecionamento de volta para a listagem
+            cy.url({ timeout: 20000 }).should('include', '/usuarios/agentes');
+        });
+
+        it('Deve excluir o agente editado, confirmar no modal e validar a remoção', () => {
+            cy.visit('/usuarios/agentes/nova-area');
+
+            // Busca o agente pelo nome
+            AgentesPage.buscarAgentePorNome(agenteNome);
+            cy.wait(`@${ALIAS.listarAgentes}`);
+
+            // Valida que o agente ainda está na tabela antes de excluir
+            AgentesPage.getTabelaAgentes().should('contain.text', agenteNome);
+
+            // Abre o menu Ações e clica em Excluir
+            AgentesPage.abrirMenuAcoes(0);
+            AgentesPage.clicarAcaoPorTexto('Excluir');
+
+            // Valida que o modal de confirmação de exclusão apareceu
+            cy.get('body', { timeout: 15000 }).should('contain.text', 'Atenção');
+            AgentesPage.getBotaoConfirmarExclusao().should('be.visible').and('contain.text', 'Excluir agente');
+
+            // Confirma a exclusão
+            AgentesPage.confirmarExclusao();
+
+            // Aguarda a requisição de exclusão e valida
+            cy.url({ timeout: 20000 }).should('include', '/usuarios/agentes');
+
+            // Busca novamente para confirmar que o agente foi removido
+            AgentesPage.buscarAgentePorNome(agenteNome);
+            cy.wait(`@${ALIAS.listarAgentes}`);
+
+            // Verifica que o agente não aparece mais na tabela
+            AgentesPage.getTabelaAgentes().should('not.contain.text', agenteNome);
+        });
+    });
 });

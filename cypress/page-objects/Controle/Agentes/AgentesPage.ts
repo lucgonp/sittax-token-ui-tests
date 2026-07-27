@@ -45,6 +45,37 @@ export const AgentesPage = {
     getBotaoAcoes: (index = 0) => cy.get('table.nd-table [data-dt-action-trigger]', { timeout: 15000 }).eq(index),
 
     // ══════════════════════════════════════════════
+    //  CAMPOS DO FORMULÁRIO DE AGENTE
+    // ══════════════════════════════════════════════
+
+    /** Campo Nome do agente (somente na tela de criação) */
+    getCampoNome: () => cy.get('#ag_nome', { timeout: 15000 }),
+
+    /** Campo E-mail do agente */
+    getCampoEmail: () => cy.get('#ag_email', { timeout: 15000 }),
+
+    /** Campo Senha do agente (somente na tela de criação) */
+    getCampoSenha: () => cy.get('#ag_password', { timeout: 15000 }),
+
+    /** Campo Descrição/Apelido do agente */
+    getCampoApelido: () => cy.get('#ag_apelido', { timeout: 15000 }),
+
+    /** Botão "Confirmar" (submit) nos formulários de criação e edição */
+    getBotaoConfirmar: () => cy.get('button.nd-action-bar__submit', { timeout: 15000 }),
+
+    /** Link "Cancelar" nos formulários de criação e edição */
+    getBotaoCancelar: () => cy.get('a.nd-action-bar__cancel', { timeout: 15000 }),
+
+    /** Botão "Excluir agente" no modal de confirmação de exclusão */
+    getBotaoConfirmarExclusao: () => cy.get('button.fly-cnpj-confirm__confirm', { timeout: 15000 }),
+
+    /** Botão "Cancelar" no modal de confirmação de exclusão */
+    getBotaoCancelarExclusao: () => cy.get('button.fly-cnpj-confirm__cancel', { timeout: 15000 }),
+
+    /** Checkbox "Forçar exclusão" no modal de exclusão */
+    getCheckboxForcarExclusao: () => cy.get('input.fly-cnpj-confirm__checkbox-input', { timeout: 15000 }),
+
+    // ══════════════════════════════════════════════
     //  AÇÕES E MÉTODOS AUXILIARES
     // ══════════════════════════════════════════════
 
@@ -64,10 +95,56 @@ export const AgentesPage = {
             .click({ force: true });
     },
 
+    // ══════════════════════════════════════════════
+    //  MÉTODOS DE CRUD
+    // ══════════════════════════════════════════════
+
+    /**
+     * Preenche o formulário de criação de agente.
+     * Todos os campos são obrigatórios na tela de cadastro.
+     */
+    preencherFormularioCriar: (nome: string, email: string, senha: string, apelido: string) => {
+        AgentesPage.getCampoNome().clear().type(nome);
+        AgentesPage.getCampoEmail().clear().type(email);
+        AgentesPage.getCampoSenha().clear().type(senha);
+        AgentesPage.getCampoApelido().clear().type(apelido);
+    },
+
+    /**
+     * Preenche os campos editáveis do formulário de edição.
+     * Na edição, o campo Nome é somente leitura.
+     */
+    preencherFormularioEditar: (apelido: string, email?: string) => {
+        AgentesPage.getCampoApelido().clear().type(apelido);
+        if (email) {
+            AgentesPage.getCampoEmail().clear().type(email);
+        }
+    },
+
+    /** Clica no botão "Confirmar" para submeter o formulário */
+    clicarConfirmar: () => {
+        AgentesPage.getBotaoConfirmar().should('be.visible').click({ force: true });
+    },
+
+    /** Clica no link "Cancelar" para voltar à listagem */
+    clicarCancelar: () => {
+        AgentesPage.getBotaoCancelar().click({ force: true });
+    },
+
+    /** Confirma a exclusão do agente no modal de confirmação */
+    confirmarExclusao: () => {
+        AgentesPage.getBotaoConfirmarExclusao().should('be.visible').click({ force: true });
+    },
+
+    /** Pesquisa um agente pelo nome no campo de busca da listagem */
+    buscarAgentePorNome: (nome: string) => {
+        AgentesPage.getCampoBusca().clear().type(`${nome}{enter}`, { force: true });
+    },
+
     /** Fecha modal ou drawer aberto na tela se existir */
     fecharModalAbertoSeExistir: () => {
         cy.get('body').then(($body) => {
-            if ($body.find('.fly-dialog, [role="dialog"], .modal, .nd-drawer').length > 0) {
+            if ($body.find('.fly-dialog, .fly-cnpj-confirm, [role="dialog"], .modal, .nd-drawer').length > 0) {
                 cy.get('body').then(($b) => {
                     if ($b.find('button.nd-group-view__close').length > 0) {
                         cy.get('button.nd-group-view__close').first().click({ force: true });
@@ -77,6 +154,8 @@ export const AgentesPage = {
                         cy.get('button.nd-proc-view__close').first().click({ force: true });
                     } else if ($b.find('button.nd-agent-password__close').length > 0) {
                         cy.get('button.nd-agent-password__close').first().click({ force: true });
+                    } else if ($b.find('button.fly-cnpj-confirm__cancel').length > 0) {
+                        cy.get('button.fly-cnpj-confirm__cancel').first().click({ force: true });
                     } else if ($b.find('button:contains("✕")').length > 0) {
                         cy.get('button:contains("✕")').first().click({ force: true });
                     } else if ($b.find('button:contains("Fechar")').length > 0) {

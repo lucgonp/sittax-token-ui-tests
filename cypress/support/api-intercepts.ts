@@ -46,6 +46,9 @@ export const ALIAS = {
     verSitesAgente: 'verSitesAgenteRequest',
     alterarSenhaAgente: 'alterarSenhaAgenteRequest',
     excluirAgenteForm: 'excluirAgenteFormRequest',
+    salvarAgente: 'salvarAgenteRequest',
+    atualizarAgente: 'atualizarAgenteRequest',
+    excluirAgente: 'excluirAgenteRequest',
     exportarAgentes: 'exportarAgentesRequest',
 } as const;
 
@@ -116,6 +119,13 @@ export function setupAgentesIntercepts(): void {
     cy.intercept('GET', /\/usuarios\/agentes\/.*\/password/).as(ALIAS.alterarSenhaAgente);
     cy.intercept('GET', /\/usuarios\/agentes\/.*\/deleteForm/).as(ALIAS.excluirAgenteForm);
     cy.intercept('GET', '**/usuarios/agentes/export*').as(ALIAS.exportarAgentes);
+
+    // POST - Submeter cadastro de agente
+    cy.intercept('POST', '**/usuarios/agentes/create*').as(ALIAS.salvarAgente);
+    // POST - Submeter edição de agente
+    cy.intercept('POST', '**/usuarios/agentes/update*').as(ALIAS.atualizarAgente);
+    // DELETE - Excluir agente
+    cy.intercept('DELETE', /\/usuarios\/agentes\/\d+/).as(ALIAS.excluirAgente);
 }
 
 

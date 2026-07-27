@@ -1,0 +1,11 @@
+{
+    "novoAgente": {
+        "nome": "Agente Teste Automacao",
+        "email": "agente.teste.auto",
+        "senha": "12345678",
+        "apelido": "AgenteAutoTest"
+    },
+    "edicao": {
+        "apelido": "AgenteAutoTestEditado"
+    }
+}
