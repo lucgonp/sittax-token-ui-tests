@@ -97,6 +97,15 @@ export const ALIAS = {
     editarRegra: 'editarRegraRequest',
     atualizarRegra: 'atualizarRegraRequest',
     excluirRegra: 'excluirRegraRequest',
+
+    // Usuários (Cadastros)
+    paginaUsuarios: 'paginaUsuarios',
+    listarUsuarios: 'listarUsuariosRequest',
+    criarUsuario: 'criarUsuarioRequest',
+    salvarUsuario: 'salvarUsuarioRequest',
+    editarUsuario: 'editarUsuarioRequest',
+    atualizarUsuario: 'atualizarUsuarioRequest',
+    excluirUsuario: 'excluirUsuarioRequest',
 } as const;
 
 /**
@@ -281,5 +290,27 @@ export function setupRegrasIntercepts(): void {
     // DELETE/POST - Excluir regra
     cy.intercept({ url: '**/controle/regras/*' }).as(ALIAS.excluirRegra);
 }
+
+/**
+ * Registra intercepts para as requisições da tela de Usuários (/usuarios).
+ */
+export function setupUsuariosIntercepts(): void {
+    // GET - Página HTML de usuários
+    cy.intercept('GET', '**/usuarios*').as(ALIAS.paginaUsuarios);
+    // POST - Listagem, busca e paginação
+    cy.intercept('POST', '**/usuarios/search-sistema*').as(ALIAS.listarUsuarios);
+    // GET - Tela de cadastro de usuário
+    cy.intercept('GET', '**/usuarios/create*').as(ALIAS.criarUsuario);
+    // POST - Salvar novo usuário
+    cy.intercept('POST', '**/users*').as(ALIAS.salvarUsuario);
+    cy.intercept('POST', '**/usuarios/create*').as(ALIAS.salvarUsuario);
+    // GET - Carregar usuário para edição
+    cy.intercept('GET', '**/usuarios/*/edit*').as(ALIAS.editarUsuario);
+    // PUT/POST - Atualizar usuário existente
+    cy.intercept({ url: '**/usuarios/*' }).as(ALIAS.atualizarUsuario);
+    // DELETE/POST - Excluir usuário
+    cy.intercept({ url: '**/usuarios/*' }).as(ALIAS.excluirUsuario);
+}
+
 
 

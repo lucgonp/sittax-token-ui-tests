@@ -1,0 +1,23 @@
+{
+    "novoUsuario": {
+        "nome": "Usuario Teste Cypress",
+        "email": "usuario.cypress@sittax.com.br",
+        "senha": "SenhaForte123!",
+        "descricao": "Apelido Teste Cypress",
+        "roleId": "1"
+    },
+    "usuarioEdicao": {
+        "nome": "Usuario Editado Cypress",
+        "descricao": "Apelido Editado Cypress"
+    },
+    "busca": {
+        "termoExistente": "Master",
+        "termoSecundario": "sittax",
+        "termoInexistente": "UsuarioInexistente99999XYZ"
+    },
+    "textos": {
+        "tituloPagina": "Usuários",
+        "botaoCadastrar": "Cadastrar usuário",
+        "tabelaVazia": "Nenhum usuário encontrado"
+    }
+}

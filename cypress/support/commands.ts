@@ -116,4 +116,15 @@ Cypress.Commands.add('navegarParaRegras', () => {
         .and('contain', 'Regras');
 });
 
+/**
+ * Navega até a página de listagem de Usuários via menu da Navbar (Cadastros -> Usuários).
+ */
+Cypress.Commands.add('navegarParaUsuarios', () => {
+    Navbar.cadastros('Usuários');
+    cy.get('.nd-title-bar .h1, .nd-title-bar__title, .nd-title-bar__left [role="heading"], h1', { timeout: 15000 })
+        .should('be.visible')
+        .and('contain', 'Usuários');
+});
+
+
 
