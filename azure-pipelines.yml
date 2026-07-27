@@ -1,0 +1,123 @@
+# =============================================================================
+# Pipeline de testes E2E — Sittax Token (Cypress + TypeScript)
+#
+# Espelha o padrão do projeto Sittax.Ui.Test (azure-pipelines.yml), adaptado ao
+# token: mantém trigger/Node/npm ci/cypress verify/cypress run + publicação de
+# resultados JUnit e artefatos; remove a infra que o token NÃO tem (dispatch
+# Jenkins, K6, sync do Test Plan, webhooks N8N, MinIO).
+#
+# IMPORTANTE — SESSÃO ÚNICA POR USUÁRIO (comprovado empiricamente):
+# O Sittax Token só permite UMA sessão ativa por conta. No Sittax.Ui.Test cada
+# área roda como JOB PARALELO; aqui isso NÃO funciona, porque todos os jobs
+# logariam com a mesma conta e derrubariam a sessão uns dos outros -> 401 no meio
+# dos testes. Por isso rodamos TODOS os specs num único `cypress run` SEQUENCIAL
+# (uma sessão só, reusada via cy.session). Para paralelizar no futuro, use uma
+# conta DEDICADA por job (uma por área) e volte ao modelo de matrix.
+# =============================================================================
+
+trigger:
+  branches:
+    include:
+    - main
+
+pr:
+  branches:
+    include:
+    - main
+
+parameters:
+- name: spec
+  displayName: 'Spec(s) — glob dos testes (padrão: todos)'
+  type: string
+  default: 'cypress/e2e/**/*.cy.ts'
+
+- name: browser
+  displayName: 'Browser'
+  type: string
+  default: chrome
+  values:
+  - chrome
+  - electron
+
+variables:
+  npm_config_cache: $(Pipeline.Workspace)/.npm
+  CYPRESS_CACHE_FOLDER: $(Pipeline.Workspace)/.cypress
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: e2e
+  displayName: 'E2E — Sittax Token'
+  jobs:
+  - job: cypress
+    displayName: 'Cypress (sequencial — sessão única)'
+    timeoutInMinutes: 90
+    steps:
+    - task: NodeTool@0
+      displayName: 'Install Node.js'
+      inputs:
+        versionSpec: '20.x'
+
+    # Cache das dependências npm + do binário do Cypress (acelera reruns e deixa
+    # o `cypress verify` confiável).
+    - task: Cache@2
+      displayName: 'Cache npm + Cypress'
+      inputs:
+        key: 'npm-cypress | "$(Agent.OS)" | package-lock.json'
+        restoreKeys: |
+          npm-cypress | "$(Agent.OS)"
+        path: $(npm_config_cache)
+
+    - task: Cache@2
+      displayName: 'Cache binário do Cypress'
+      inputs:
+        key: 'cypress-bin | "$(Agent.OS)" | package-lock.json'
+        path: $(CYPRESS_CACHE_FOLDER)
+
+    - script: npm ci
+      displayName: 'npm ci'
+
+    - script: npx cypress verify
+      displayName: 'Verify Cypress'
+      retryCountOnTaskFailure: 3
+
+    # Um único run, TODOS os specs em sequência (uma sessão). O exit code do
+    # Cypress reflete qualquer falha -> falha o build naturalmente.
+    - script: npx cypress run --browser ${{ parameters.browser }} --spec "${{ parameters.spec }}"
+      displayName: 'Run Cypress E2E (todos os specs, sequencial)'
+      env:
+        # baseUrl já vem do cypress.config.ts (https://token.stage.sittax.com.br/).
+        # Credenciais: hoje vêm da fixture cypress/fixtures/Login/login.json (conta
+        # dedicada à automação). Recomendado migrar para variáveis SECRETAS do
+        # pipeline e ler via Cypress.env() no cy.logar — nunca commitar senha real.
+        CYPRESS_baseUrl: 'https://token.stage.sittax.com.br/'
+
+    - task: PublishTestResults@2
+      displayName: 'Publicar JUnit na aba Tests'
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'results/*.xml'
+        searchFolder: '$(System.DefaultWorkingDirectory)'
+        mergeTestResults: true
+        testRunTitle: 'Sittax Token E2E — $(Build.SourceBranchName) — #$(Build.BuildNumber)'
+        failTaskOnFailedTests: true
+        failTaskOnMissingResultsFile: true
+        publishRunAttachments: true
+      condition: always()
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Upload screenshots (só há em falhas)'
+      inputs:
+        pathToPublish: 'cypress/screenshots'
+        artifactName: 'screenshots'
+      condition: always()
+      continueOnError: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Upload relatórios XML'
+      inputs:
+        pathToPublish: 'results'
+        artifactName: 'test-results'
+      condition: always()
+      continueOnError: true
