@@ -58,7 +58,8 @@ Cypress.Commands.add('loginPadrao', () => {
  */
 Cypress.Commands.add('navegarParaGrupos', () => {
     cy.visit('/grupos');
-    cy.get('.nd-title-bar__left [role="heading"]', { timeout: 15000 })
+    cy.get('.nd-title-bar .h1, .nd-title-bar__title, .nd-title-bar__left [role="heading"], h1', { timeout: 15000 })
         .should('be.visible')
         .and('contain', 'Grupos');
 });
+

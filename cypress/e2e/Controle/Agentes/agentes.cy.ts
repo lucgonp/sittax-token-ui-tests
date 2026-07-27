@@ -298,8 +298,9 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
             AgentesPage.buscarAgentePorNome(agenteNome);
             cy.wait(`@${ALIAS.listarAgentes}`);
 
-            // Verifica que o agente não aparece mais na tabela
-            AgentesPage.getTabelaAgentes().should('not.contain.text', agenteNome);
+            // Verifica que o agente não aparece mais no container/tabela
+            cy.get('.nd-table-container, body').should('not.contain.text', agenteNome);
         });
     });
 });
+
