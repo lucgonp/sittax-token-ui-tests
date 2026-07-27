@@ -5,20 +5,25 @@ import { Navbar } from '../page-objects/Navbar';
 import { setupLoginIntercepts } from './api-intercepts';
 
 /**
- * Fecha o modal "Novidade!" que aparece na dashboard logo após o login e cobre a
- * navbar (impedindo a navegação pelo menu). Como ele renderiza de forma assíncrona,
- * fazemos um poll curto: assim que aparecer, fechamos; se não aparecer, seguimos.
+ * Fecha o modal "Novidade!" (`.fly-aviso`) que SEMPRE aparece na dashboard após o
+ * login e cobre a navbar (position:fixed, z-index:1000), bloqueando a navegação
+ * pelo menu. Precisa ser fechado ANTES de qualquer interação/assert na navbar.
+ *
+ * Ele renderiza de forma assíncrona; fazemos um poll curto: assim que aparecer,
+ * clicamos no ✕ (`.fly-dialog__close`) e confirmamos o fechamento. Se não aparecer
+ * dentro da janela, seguimos (defensivo, caso deixe de ser exibido).
  */
-function fecharModalNovidades(tentativas = 4): void {
+function fecharModalNovidades(tentativas = 8): void {
     cy.get('body').then(($b) => {
-        const aberto = $b.find(':contains("Novidade!")').filter(':visible').length > 0;
-        if (aberto) {
-            cy.get('body').contains('button', '✕').click({ force: true });
+        const $aviso = $b.find('.fly-aviso').filter(':visible');
+        if ($aviso.length > 0) {
+            cy.get('.fly-aviso .fly-dialog__close, .fly-aviso [data-dialog-close="true"]', { timeout: 8000 })
+                .first()
+                .click({ force: true });
+            // Confirma o fechamento (removido do DOM ou oculto) antes de prosseguir.
             cy.get('body').should(($b2) => {
-                expect(
-                    $b2.find(':contains("Novidade!")').filter(':visible').length,
-                    'modal Novidade! fechado',
-                ).to.eq(0);
+                const $a = $b2.find('.fly-aviso');
+                expect($a.length === 0 || $a.filter(':visible').length === 0, 'modal Novidade! fechado').to.eq(true);
             });
         } else if (tentativas > 0) {
             cy.wait(250);
@@ -68,9 +73,10 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
     // navbar fique disponível. A partir daqui os testes navegam clicando no menu
     // (ver page-objects/Navbar.ts) em vez de usar cy.visit() com a rota.
     cy.visit('/dashboard');
-    cy.get('nav.nd-navbar', { timeout: 20000 }).should('be.visible');
-    // Fecha o modal de novidades (se surgir) para não bloquear a navegação pelo menu.
+    // Fecha o modal "Novidade!" ANTES de tocar na navbar — ele cobre a navbar e
+    // faria o `should('be.visible')` (e a navegação pelo menu) falhar.
     fecharModalNovidades();
+    cy.get('nav.nd-navbar', { timeout: 20000 }).should('be.visible');
 });
 
 /**
