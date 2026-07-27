@@ -1,10 +1,9 @@
 /// <reference types="cypress" />
 
-import { LoginPage } from '../page-objects/Login/LoginPage';
-import { DashboardPage } from '../page-objects/Dashboard/DashboardPage';
-import { setupLoginIntercepts, setupDashboardIntercepts, ALIAS } from '../support/api-intercepts';
+import { DashboardPage } from '../../page-objects/Dashboard/DashboardPage';
+import { setupDashboardIntercepts, ALIAS } from '../../support/api-intercepts';
 
-describe('Sittax Token - Testes de Login e Dashboard', () => {
+describe('Sittax Token - Dashboard', () => {
 
     let loginData: any;
 
@@ -15,54 +14,7 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
     });
 
     beforeEach(() => {
-        setupLoginIntercepts();
         setupDashboardIntercepts();
-    });
-
-    // ══════════════════════════════════════════════
-    //  TESTES DE LOGIN E INTERCEPTAÇÃO DE REQUISIÇÃO
-    // ══════════════════════════════════════════════
-
-    describe('Autenticação e Validação de Requisição', () => {
-
-        // Cada teste de login parte de uma sessão limpa, como um navegador novo em produção.
-        // Com testIsolation:false (exigido pelo cy.session), o cookie de uma tentativa falha
-        // persiste e dessincroniza do CSRF token, gerando 419 → "atualiza e volta pro login".
-        beforeEach(() => {
-            cy.clearCookies();
-            cy.clearLocalStorage();
-        });
-
-        it('Deve exibir os elementos da tela de login corretamente', () => {
-            cy.visit('/');
-            cy.title().should('contain', 'Sittax');
-            LoginPage.getCampoEmail().should('be.visible');
-            LoginPage.getCampoSenha().should('be.visible');
-            LoginPage.getBotaoEntrar().should('be.visible');
-        });
-
-        it('Deve recusar login com credenciais inválidas e exibir mensagem de erro', () => {
-            cy.visit('/');
-            LoginPage.preencherESubmeter(loginData.invalidUser.email, loginData.invalidUser.password);
-            
-            // Valida a mensagem de erro de autenticação no formulário
-            cy.contains('Email/Senha estão incorretos.').should('be.visible');
-            cy.url().should('not.include', '/dashboard');
-        });
-
-        it('Deve realizar login com sucesso via UI, interceptar POST /login e redirecionar para /dashboard', () => {
-            cy.visit('/');
-            LoginPage.preencherESubmeter(loginData.validUser.email, loginData.validUser.password);
-
-            // Valida interceptação da requisição POST de login (HTTP 200/302)
-            cy.wait(`@${ALIAS.login}`).then((interception) => {
-                expect(interception.response?.statusCode).to.be.oneOf([200, 302]);
-                expect(interception.request.body).to.include(encodeURIComponent(loginData.validUser.email));
-            });
-
-            // Valida redirecionamento para a rota protegida
-            cy.url({ timeout: 15000 }).should('include', '/dashboard');
-        });
     });
 
     // ══════════════════════════════════════════════
@@ -100,7 +52,7 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
 
         it('Deve exibir os cards de estatísticas (Certificados, Procurações e Agentes)', () => {
             DashboardPage.validarCardsPrincipais();
-            
+
             // Valida os rótulos de detalhes dentro do grid (.nd-stats-grid)
             cy.get('.nd-stats-grid').within(() => {
                 cy.contains('.nd-stats-card__detail-label', 'Desconhecidos').should('be.visible');
@@ -164,12 +116,10 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
             DashboardPage.abrirMenuAcoes(0);
             DashboardPage.clicarAcaoPorKey('procuracoes');
 
-            // Intercepta e valida requisição HTTP real
             cy.wait(`@${ALIAS.verProcuracoes}`).then((interception) => {
                 expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
             });
 
-            // Valida a exibição do modal/painel de procurações
             cy.get('body').should('contain.text', 'Procuraç');
         });
 
@@ -177,12 +127,10 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
             DashboardPage.abrirMenuAcoes(0);
             DashboardPage.clicarAcaoPorKey('acessos');
 
-            // Intercepta e valida requisição HTTP real
             cy.wait(`@${ALIAS.verAcessos}`).then((interception) => {
                 expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
             });
 
-            // Valida a exibição do modal de acessos
             cy.get('body').should('exist');
         });
 
@@ -193,12 +141,10 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
             DashboardPage.abrirMenuAcoes(0);
             DashboardPage.clicarAcaoPorKey('share');
 
-            // Intercepta e valida requisição HTTP real
             cy.wait(`@${ALIAS.compartilharCertificado}`).then((interception) => {
                 expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
             });
 
-            // Valida a exibição do modal de compartilhamento
             cy.get('body').should('contain.text', 'Compartilhar');
         });
 
@@ -209,12 +155,10 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
             DashboardPage.abrirMenuAcoes(0);
             DashboardPage.clicarAcaoPorKey('sharePartner');
 
-            // Intercepta e valida requisição HTTP real
             cy.wait(`@${ALIAS.compartilharCertificado}`).then((interception) => {
                 expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
             });
 
-            // Valida a exibição do modal de compartilhamento por CNPJ
             cy.get('body').should('contain.text', 'CNPJ');
         });
 
@@ -225,12 +169,10 @@ describe('Sittax Token - Testes de Login e Dashboard', () => {
             DashboardPage.abrirMenuAcoes(0);
             DashboardPage.clicarAcaoPorKey('edit');
 
-            // Intercepta e valida requisição HTTP real
             cy.wait(`@${ALIAS.editarCertificado}`).then((interception) => {
                 expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
             });
 
-            // Valida a exibição do modal de edição
             cy.get('body').should('contain.text', 'Editar');
         });
 
