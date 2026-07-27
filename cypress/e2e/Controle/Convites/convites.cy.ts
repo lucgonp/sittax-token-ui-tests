@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { ConvitesPage } from '../../../page-objects/Controle/Convites/ConvitesPage';
+import { Navbar } from '../../../page-objects/Navbar';
 import { setupLoginIntercepts, setupConvitesIntercepts, ALIAS } from '../../../support/api-intercepts';
 
 describe('Controle - Tela de Convites (/controle/convites)', () => {
@@ -30,13 +31,13 @@ describe('Controle - Tela de Convites (/controle/convites)', () => {
     describe('Exibição da Página e Elementos Iniciais', () => {
 
         it('Deve carregar a rota /controle/convites com status HTTP 200', () => {
-            cy.visit('/controle/convites');
+            Navbar.controle('Convites');
             cy.wait(`@${ALIAS.paginaConvites}`).its('response.statusCode').should('be.oneOf', [200, 304]);
             ConvitesPage.getTitulo().should('be.visible').and('contain.text', 'Convites');
         });
 
         it('Deve renderizar os elementos da barra de ações (Convidar, Busca, Ações)', () => {
-            cy.visit('/controle/convites');
+            Navbar.controle('Convites');
             ConvitesPage.getBotaoCadastrarConvite().should('be.visible');
             ConvitesPage.getCampoBusca().should('be.visible');
 
@@ -52,7 +53,7 @@ describe('Controle - Tela de Convites (/controle/convites)', () => {
         });
 
         it('Deve exibir a tabela de convites com a estrutura esperada', () => {
-            cy.visit('/controle/convites');
+            Navbar.controle('Convites');
             ConvitesPage.getTabelaConvites().should('be.visible');
             cy.get('body').then(($body) => {
                 expect($body.find('table.nd-table th, table.nd-table td').length).to.be.greaterThan(0);
@@ -67,7 +68,7 @@ describe('Controle - Tela de Convites (/controle/convites)', () => {
     describe('Busca e Filtros com Interceptação de API', () => {
 
         beforeEach(() => {
-            cy.visit('/controle/convites');
+            Navbar.controle('Convites');
             ConvitesPage.fecharModalAbertoSeExistir();
         });
 
@@ -113,7 +114,7 @@ describe('Controle - Tela de Convites (/controle/convites)', () => {
     describe('Navegação e Estrutura do Formulário de Cadastro de Convite', () => {
 
         it('Deve navegar para a tela de cadastro /controle/convites/create e validar os campos', () => {
-            cy.visit('/controle/convites');
+            Navbar.controle('Convites');
             ConvitesPage.getBotaoCadastrarConvite().click({ force: true });
 
             cy.url().should('include', '/controle/convites/create');
@@ -127,7 +128,8 @@ describe('Controle - Tela de Convites (/controle/convites)', () => {
         });
 
         it('Deve permitir clicar em Cancelar e retornar para a listagem', () => {
-            cy.visit('/controle/convites/create');
+            Navbar.controle('Convites');
+            ConvitesPage.getBotaoCadastrarConvite().click({ force: true });
             ConvitesPage.getBotaoCancelar().click({ force: true });
             cy.url().should('include', '/controle/convites');
         });
@@ -145,7 +147,8 @@ describe('Controle - Tela de Convites (/controle/convites)', () => {
                 requestFired = true;
             }).as('salvarConviteCustom');
 
-            cy.visit('/controle/convites/create');
+            Navbar.controle('Convites');
+            ConvitesPage.getBotaoCadastrarConvite().click({ force: true });
 
             // Preenche o formulário com dados da fixture
             ConvitesPage.preencherFormularioConvite(conviteFixture.novoConviteValido);
@@ -160,13 +163,13 @@ describe('Controle - Tela de Convites (/controle/convites)', () => {
 
 
         it('R - Read: Deve carregar a listagem e validar que os dados dos convites são exibidos', () => {
-            cy.visit('/controle/convites');
+            Navbar.controle('Convites');
             cy.wait(`@${ALIAS.paginaConvites}`).its('response.statusCode').should('be.oneOf', [200, 304]);
             ConvitesPage.getTabelaConvites().should('be.visible');
         });
 
         it('U - Update / Reenviar: Deve acionar o reenvio de convite se houver linha na tabela', () => {
-            cy.visit('/controle/convites');
+            Navbar.controle('Convites');
 
             cy.get('body').then(($body) => {
                 if ($body.find('table.nd-table [data-dt-action-trigger], table.nd-table button.nd-actions-btn').length > 0) {
@@ -190,7 +193,7 @@ describe('Controle - Tela de Convites (/controle/convites)', () => {
         });
 
         it('D - Delete / Cancelar: Deve abrir o modal de exclusão e interceptar a requisição', () => {
-            cy.visit('/controle/convites');
+            Navbar.controle('Convites');
 
             cy.get('body').then(($body) => {
                 if ($body.find('table.nd-table [data-dt-action-trigger], table.nd-table button.nd-actions-btn').length > 0) {

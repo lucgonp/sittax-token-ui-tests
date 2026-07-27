@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { LoginPage } from '../page-objects/Login/LoginPage';
+import { Navbar } from '../page-objects/Navbar';
 import { setupLoginIntercepts } from './api-intercepts';
 
 /**
@@ -39,6 +40,12 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
             cacheAcrossSpecs: true,
         },
     );
+
+    // Entra no app após autenticar: carrega o dashboard (home pós-login) para que a
+    // navbar fique disponível. A partir daqui os testes navegam clicando no menu
+    // (ver page-objects/Navbar.ts) em vez de usar cy.visit() com a rota.
+    cy.visit('/dashboard');
+    cy.get('nav.nd-navbar', { timeout: 20000 }).should('be.visible');
 });
 
 /**
@@ -57,7 +64,7 @@ Cypress.Commands.add('loginPadrao', () => {
  * Usa o título da barra de página (não o link oculto da navbar).
  */
 Cypress.Commands.add('navegarParaGrupos', () => {
-    cy.visit('/grupos');
+    Navbar.cadastros('Grupos');
     cy.get('.nd-title-bar .h1, .nd-title-bar__title, .nd-title-bar__left [role="heading"], h1', { timeout: 15000 })
         .should('be.visible')
         .and('contain', 'Grupos');

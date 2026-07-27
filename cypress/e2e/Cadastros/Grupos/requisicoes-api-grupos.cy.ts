@@ -13,13 +13,11 @@ import { setupGruposIntercepts, ALIAS } from '../../../support/api-intercepts';
  */
 describe('Grupos - Requisições de API', () => {
 
-    before(() => {
-        cy.loginPadrao();
-    });
-
     beforeEach(() => {
+        cy.loginPadrao();
         setupGruposIntercepts();
     });
+
 
     // ══════════════════════════════════════════════
     //  LISTAR GRUPOS
@@ -62,7 +60,9 @@ describe('Grupos - Requisições de API', () => {
     describe('POST - Certificados (Tela de Cadastro)', () => {
 
         it('Deve carregar certificados ao abrir a tela de cadastro', () => {
-            cy.visit('/grupos/nova-area/create');
+            // Navega como usuário: Cadastros → Grupos e clica em "Cadastrar grupo"
+            cy.navegarParaGrupos();
+            GruposPage.clicarCadastrarGrupo();
             cy.wait(`@${ALIAS.buscarCertificados}`).its('response.statusCode').should('eq', 200);
         });
     });

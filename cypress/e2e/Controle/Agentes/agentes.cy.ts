@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { AgentesPage } from '../../../page-objects/Controle/Agentes/AgentesPage';
+import { Navbar } from '../../../page-objects/Navbar';
 import { setupLoginIntercepts, setupAgentesIntercepts, ALIAS } from '../../../support/api-intercepts';
 
 describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
@@ -26,13 +27,13 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
     describe('Exibição da Página e Elementos Iniciais', () => {
 
         it('Deve carregar a rota /usuarios/agentes/nova-area com status HTTP 200', () => {
-            cy.visit('/usuarios/agentes/nova-area');
+            Navbar.controle('Agentes');
             cy.wait(`@${ALIAS.paginaAgentes}`).its('response.statusCode').should('be.oneOf', [200, 304]);
             AgentesPage.getTitulo().should('be.visible').and('contain.text', 'Agentes');
         });
 
         it('Deve renderizar os elementos da barra de ações (Cadastrar, Busca, Filtro, Exportar)', () => {
-            cy.visit('/usuarios/agentes/nova-area');
+            Navbar.controle('Agentes');
             AgentesPage.getBotaoCadastrarAgente().should('be.visible');
             AgentesPage.getCampoBusca().should('be.visible');
             AgentesPage.getBotaoFiltro().should('be.visible');
@@ -40,7 +41,7 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
         });
 
         it('Deve exibir a tabela de agentes com as colunas esperadas', () => {
-            cy.visit('/usuarios/agentes/nova-area');
+            Navbar.controle('Agentes');
             AgentesPage.getTabelaAgentes().within(() => {
                 cy.contains('th, td, div', 'Nome').should('be.visible');
                 cy.contains('th, td, div', 'Descrição').should('be.visible');
@@ -57,7 +58,7 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
     describe('Busca, Filtros e Exportação com Interceptação de API', () => {
 
         beforeEach(() => {
-            cy.visit('/usuarios/agentes/nova-area');
+            Navbar.controle('Agentes');
         });
 
         it('Deve pesquisar por nome do agente, interceptar POST /search e atualizar a tabela', () => {
@@ -91,7 +92,7 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
     describe('Navegação para a Tela de Cadastro de Agente', () => {
 
         it('Deve clicar em "Cadastrar agente", interceptar GET /usuarios/agentes/create e renderizar o formulário', () => {
-            cy.visit('/usuarios/agentes/nova-area');
+            Navbar.controle('Agentes');
             AgentesPage.getBotaoCadastrarAgente().click({ force: true });
 
             cy.wait(`@${ALIAS.criarAgente}`).its('response.statusCode').should('be.oneOf', [200, 304]);
@@ -112,7 +113,7 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
     describe('Validação de Todas as Ações do Menu da Tabela de Agentes', () => {
 
         beforeEach(() => {
-            cy.visit('/usuarios/agentes/nova-area');
+            Navbar.controle('Agentes');
             AgentesPage.fecharModalAbertoSeExistir();
         });
 
@@ -200,7 +201,7 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
         });
 
         it('Deve cadastrar um novo agente preenchendo o formulário e submeter com sucesso', () => {
-            cy.visit('/usuarios/agentes/nova-area');
+            Navbar.controle('Agentes');
             AgentesPage.getBotaoCadastrarAgente().click({ force: true });
 
             cy.wait(`@${ALIAS.criarAgente}`).its('response.statusCode').should('be.oneOf', [200, 304]);
@@ -227,7 +228,7 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
         });
 
         it('Deve localizar o agente criado na listagem via busca', () => {
-            cy.visit('/usuarios/agentes/nova-area');
+            Navbar.controle('Agentes');
 
             // Busca pelo nome do agente recém-criado
             AgentesPage.buscarAgentePorNome(agenteNome);
@@ -238,7 +239,7 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
         });
 
         it('Deve editar o agente criado, alterar a descrição e salvar com sucesso', () => {
-            cy.visit('/usuarios/agentes/nova-area');
+            Navbar.controle('Agentes');
 
             // Busca o agente criado
             AgentesPage.buscarAgentePorNome(agenteNome);
@@ -270,7 +271,7 @@ describe('Controle - Tela de Agentes (/usuarios/agentes/nova-area)', () => {
         });
 
         it('Deve excluir o agente editado, confirmar no modal e validar a remoção', () => {
-            cy.visit('/usuarios/agentes/nova-area');
+            Navbar.controle('Agentes');
 
             // Busca o agente pelo nome
             AgentesPage.buscarAgentePorNome(agenteNome);

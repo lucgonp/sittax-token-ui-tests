@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { CertificadosPage } from '../../../page-objects/Controle/Certificados/CertificadosPage';
+import { Navbar } from '../../../page-objects/Navbar';
 import { setupLoginIntercepts, setupCertificadosIntercepts, ALIAS } from '../../../support/api-intercepts';
 
 describe('Controle - Tela de Certificados (/controle/certificados)', () => {
@@ -26,13 +27,13 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
     describe('Exibição da Página e Elementos Iniciais', () => {
 
         it('Deve carregar a rota /controle/certificados com status HTTP 200', () => {
-            cy.visit('/controle/certificados');
+            Navbar.controle('Certificados');
             cy.wait(`@${ALIAS.paginaCertificados}`).its('response.statusCode').should('be.oneOf', [200, 304]);
             CertificadosPage.getTitulo().should('be.visible').and('contain.text', 'Certificados');
         });
 
         it('Deve renderizar os elementos da barra de ações (Importar, Busca, Filtro, Exportar)', () => {
-            cy.visit('/controle/certificados');
+            Navbar.controle('Certificados');
             CertificadosPage.getBotaoCadastrarCertificado().should('be.visible');
             CertificadosPage.getCampoBusca().should('be.visible');
             CertificadosPage.getBotaoFiltro().should('be.visible');
@@ -40,7 +41,7 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
         });
 
         it('Deve exibir a tabela de certificados com as colunas esperadas', () => {
-            cy.visit('/controle/certificados');
+            Navbar.controle('Certificados');
             CertificadosPage.getTabelaCertificados().within(() => {
                 cy.contains('th, td, div', 'Razão social').should('be.visible');
                 cy.contains('th, td, div', 'Origem').should('be.visible');
@@ -58,7 +59,7 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
     describe('Busca, Filtros e Exportação com Interceptação de API', () => {
 
         beforeEach(() => {
-            cy.visit('/controle/certificados');
+            Navbar.controle('Certificados');
             CertificadosPage.fecharModalNovidadesSeExistir();
         });
 
@@ -83,7 +84,7 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
     describe('Navegação para a Tela de Cadastro de Certificado', () => {
 
         it('Deve clicar em "Cadastrar certificado", interceptar GET /create e renderizar o formulário', () => {
-            cy.visit('/controle/certificados');
+            Navbar.controle('Certificados');
             CertificadosPage.getBotaoCadastrarCertificado().click({ force: true });
 
             cy.wait(`@${ALIAS.criarCertificado}`).its('response.statusCode').should('be.oneOf', [200, 304]);
@@ -104,7 +105,7 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
     describe('Validação de Todas as Ações do Menu da Tabela de Certificados', () => {
 
         beforeEach(() => {
-            cy.visit('/controle/certificados');
+            Navbar.controle('Certificados');
             CertificadosPage.fecharModalNovidadesSeExistir();
             CertificadosPage.fecharModalAbertoSeExistir();
         });
@@ -157,7 +158,7 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
         });
 
         it('Deve fazer upload de um certificado .pfx preenchendo o formulário e submeter com sucesso', () => {
-            cy.visit('/controle/certificados');
+            Navbar.controle('Certificados');
             CertificadosPage.getBotaoCadastrarCertificado().click({ force: true });
 
             cy.wait(`@${ALIAS.criarCertificado}`).its('response.statusCode').should('be.oneOf', [200, 304]);
@@ -187,7 +188,7 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
         });
 
         it('Deve localizar o certificado importado na listagem via busca', () => {
-            cy.visit('/controle/certificados');
+            Navbar.controle('Certificados');
 
             // Busca pelo nome/CNPJ do certificado recém-importado
             CertificadosPage.buscarCertificadoPorTermo(certData.razaoSocial);
@@ -198,7 +199,7 @@ describe('Controle - Tela de Certificados (/controle/certificados)', () => {
         });
 
         it('Deve excluir o certificado importado, digitando o CNPJ e confirmando', () => {
-            cy.visit('/controle/certificados');
+            Navbar.controle('Certificados');
 
             // Busca o certificado importado
             CertificadosPage.buscarCertificadoPorTermo(certData.razaoSocial);
