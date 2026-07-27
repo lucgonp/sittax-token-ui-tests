@@ -44,20 +44,23 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
         throw new Error('Parâmetros inválidos para cy.logar: email e password são obrigatórios');
     }
 
+    // Login por UI. Reutilizado no setup do cy.session E na auto-cura de sessão
+    // expirada (abaixo), para não duplicar a lógica de autenticação.
+    const loginViaUI = () => {
+        setupLoginIntercepts();
+        cy.visit('/');
+        LoginPage.preencherESubmeter(email, password);
+        // Aguarda o redirecionamento pós-login (sai da tela de login)
+        cy.url({ timeout: 20000 }).should('not.include', '/login');
+        // Confirma que a sessão autenticada acessa uma página protegida.
+        // Usa o título da página de Grupos (elemento estável) como âncora.
+        cy.visit('/grupos');
+        cy.get('.nd-title-bar__left [role="heading"]', { timeout: 20000 }).should('contain', 'Grupos');
+    };
+
     cy.session(
         email,
-        () => {
-            setupLoginIntercepts();
-            cy.visit('/');
-            LoginPage.preencherESubmeter(email, password);
-            // Aguarda o redirecionamento pós-login (sai da tela de login)
-            cy.url({ timeout: 20000 }).should('not.include', '/login');
-            // Confirma que a sessão autenticada acessa uma página protegida.
-            // Usa o título da página de Grupos (elemento estável) como âncora.
-            cy.visit('/grupos');
-            cy.get('.nd-title-bar__left [role="heading"]', { timeout: 20000 })
-                .should('contain', 'Grupos');
-        },
+        loginViaUI,
         {
             // Revalida a sessão restaurada do cache. IMPORTANTE: o /dashboard devolve
             // HTML 200 mesmo deslogado (só a chamada de DADOS responde 401 e as páginas
@@ -74,10 +77,21 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
         },
     );
 
-    // Entra no app após autenticar: carrega o dashboard (home pós-login) para que a
-    // navbar fique disponível. A partir daqui os testes navegam clicando no menu
-    // (ver page-objects/Navbar.ts) em vez de usar cy.visit() com a rota.
+    // Entra no app + AUTO-CURA de sessão expirada. A sessão pode morrer na janela
+    // entre o validate() e agora: o /dashboard ainda devolve HTML 200 (navbar aparece)
+    // mas o POST de dados responde 401 e as páginas protegidas passam a redirecionar
+    // p/ /login — quebrando a navegação pelo menu no meio da suíte. Detectamos pelo
+    // status do POST do dashboard; se não for 200, limpamos a sessão e relogamos.
+    cy.intercept('POST', '**/dashboard/nova-area/search*').as('entrarSessao');
     cy.visit('/dashboard');
+    cy.wait('@entrarSessao', { timeout: 15000 }).then((interception) => {
+        if (!interception.response || interception.response.statusCode !== 200) {
+            cy.log('Sessão expirada detectada na entrada — refazendo login por UI');
+            Cypress.session.clearAllSavedSessions();
+            loginViaUI();
+            cy.visit('/dashboard');
+        }
+    });
     // Fecha o modal "Novidade!" ANTES de tocar na navbar — ele cobre a navbar e
     // faria o `should('be.visible')` (e a navegação pelo menu) falhar.
     fecharModalNovidades();
