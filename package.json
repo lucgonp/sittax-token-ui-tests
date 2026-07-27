@@ -1,8 +1,7 @@
 {
   "name": "sittax-token-ui-tests",
   "version": "1.0.0",
-  "description": "Sittax Token - Testes E2E da tela de Grupos",
-  "main": "index.ts",
+  "description": "Sittax Token - Testes E2E (Cypress + TypeScript): Login, Dashboard e Grupos",
   "scripts": {
     "test": "npx cypress open",
     "test:run": "npx cypress run",

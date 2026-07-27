@@ -79,7 +79,8 @@ export function setupLoginIntercepts(): void {
 export function setupDashboardIntercepts(): void {
     cy.intercept('GET', '**/dashboard*').as(ALIAS.dashboard);
     cy.intercept('GET', '**/controle/certificados/view-data/*').as(ALIAS.verCertificado);
-    cy.intercept('GET', '**/controle/certificados/procuracoes*').as(ALIAS.verProcuracoes);
+    // O app dispara procuracoes-ajax/{id}; ** casa através da barra (o glob * não cruza /)
+    cy.intercept('GET', '**/controle/certificados/procuracoes**').as(ALIAS.verProcuracoes);
     cy.intercept('GET', '**/controle/certificados/sites/*').as(ALIAS.verAcessos);
     cy.intercept('GET', '**/controle/certificados/doubleForm/*').as(ALIAS.compartilharCertificado);
     cy.intercept('GET', '**/controle/certificados/update/*').as(ALIAS.editarCertificado);

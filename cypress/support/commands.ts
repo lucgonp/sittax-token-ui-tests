@@ -42,6 +42,17 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
 });
 
 /**
+ * Login com o usuário padrão da fixture (Login/login.json).
+ * Encapsula o carregamento da fixture para specs que só precisam autenticar,
+ * sem repetir o `cy.fixture(...).then(...)` em cada arquivo.
+ */
+Cypress.Commands.add('loginPadrao', () => {
+    cy.fixture('Login/login.json').then((login) => {
+        cy.logar(login.validUser.email, login.validUser.password);
+    });
+});
+
+/**
  * Navega até a página de listagem de Grupos e aguarda o título renderizar.
  * Usa o título da barra de página (não o link oculto da navbar).
  */

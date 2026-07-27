@@ -11,16 +11,11 @@ import { setupGruposIntercepts, ALIAS } from '../../support/api-intercepts';
  */
 describe('Grupos - Busca e Filtro', () => {
 
-    let login: any;
-
     before(() => {
-        cy.fixture('Login/login.json').then((data) => {
-            login = data;
-            cy.logar(login.validUser.email, login.validUser.password);
-            setupGruposIntercepts();
-            cy.navegarParaGrupos();
-            cy.wait(`@${ALIAS.listarGrupos}`);
-        });
+        cy.loginPadrao();
+        setupGruposIntercepts();
+        cy.navegarParaGrupos();
+        cy.wait(`@${ALIAS.listarGrupos}`);
     });
 
     beforeEach(() => {

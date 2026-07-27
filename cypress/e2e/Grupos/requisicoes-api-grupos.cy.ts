@@ -13,13 +13,8 @@ import { setupGruposIntercepts, ALIAS } from '../../support/api-intercepts';
  */
 describe('Grupos - Requisições de API', () => {
 
-    let login: any;
-
     before(() => {
-        cy.fixture('Login/login.json').then((data) => {
-            login = data;
-            cy.logar(login.validUser.email, login.validUser.password);
-        });
+        cy.loginPadrao();
     });
 
     beforeEach(() => {

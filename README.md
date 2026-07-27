@@ -1,6 +1,6 @@
 # sittax-token-ui-tests
 
-Testes E2E (Cypress + TypeScript) da tela de **Grupos** do Sittax Token, escritos com metodologia **Page Object Model (POM)**.
+Testes E2E (Cypress + TypeScript) do Sittax Token — **Login**, **Dashboard** e **Grupos** — escritos com metodologia **Page Object Model (POM)**.
 
 ## Requisitos
 - Node.js
@@ -21,8 +21,9 @@ npm run test:grupos   # roda apenas a suíte de Grupos
 ## Estrutura
 ```
 cypress/
-├── e2e/Grupos/            # specs de teste (exibição, busca, cadastro, ações, paginação, navbar, API)
-├── page-objects/          # Page Objects (Login, Grupos, CadastrarGrupo)
+├── e2e/login-dashboard.cy.ts  # specs de Login e Dashboard
+├── e2e/Grupos/            # specs de Grupos (exibição, busca, cadastro, ações, paginação, navbar, API)
+├── page-objects/          # Page Objects (Login, Dashboard, Grupos, CadastrarGrupo)
 ├── fixtures/              # dados de teste (login, grupos)
 └── support/              # comandos customizados, intercepts, tratamento de exceções
 ```

@@ -10,6 +10,11 @@ declare namespace Cypress {
     logar(email: string, password: string): Chainable<void>;
 
     /**
+     * Login com o usuário padrão (fixture Login/login.json).
+     */
+    loginPadrao(): Chainable<void>;
+
+    /**
      * Navega até a página de Grupos.
      */
     navegarParaGrupos(): Chainable<void>;
