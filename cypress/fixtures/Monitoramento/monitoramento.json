@@ -1,0 +1,16 @@
+{
+    "busca": {
+        "usuarioValido": "newnino",
+        "usuarioSecundario": "wesley.queiroz",
+        "termoInexistente": "UsuarioInexistente99999XYZ",
+        "certificadoFiltro": "BYTOKEN SISTEMAS LTDA",
+        "dataInicio": "2026-05-01",
+        "dataFim": "2026-05-31"
+    },
+    "textos": {
+        "tituloPagina": "Monitoramento",
+        "tabelaVazia": "Nenhum monitoramento encontrado",
+        "botaoAtualizar": "Atualizar",
+        "botaoRelatorio": "Relatório"
+    }
+}

@@ -80,6 +80,12 @@ export const ALIAS = {
     reenviarConvite: 'reenviarConviteRequest',
     excluirConvite: 'excluirConviteRequest',
     exportarConvites: 'exportarConvitesRequest',
+
+    // Monitoramento (Controle)
+    paginaMonitoramentos: 'paginaMonitoramentos',
+    listarMonitoramentos: 'listarMonitoramentosRequest',
+    exportarMonitoramentos: 'exportarMonitoramentosRequest',
+    verVideoMonitoramento: 'verVideoMonitoramentoRequest',
 } as const;
 
 /**
@@ -227,3 +233,18 @@ export function setupConvitesIntercepts(): void {
     // GET - Exportar convites
     cy.intercept('GET', '**/controle/convites/export*').as(ALIAS.exportarConvites);
 }
+
+/**
+ * Registra intercepts para as requisições da tela de Monitoramento (/controle/monitoramentos/nova-area).
+ */
+export function setupMonitoramentosIntercepts(): void {
+    // GET - Página HTML de monitoramento
+    cy.intercept('GET', '**/controle/monitoramentos/nova-area*').as(ALIAS.paginaMonitoramentos);
+    // POST - Listagem, busca, paginação e atualização
+    cy.intercept('POST', '**/controle/monitoramentos/nova-area/search*').as(ALIAS.listarMonitoramentos);
+    // GET - Exportar monitoramentos
+    cy.intercept('GET', '**/controle/monitoramentos/export*').as(ALIAS.exportarMonitoramentos);
+    // GET - Ver vídeo/gravação de monitoramento
+    cy.intercept('GET', '**/controle/monitoramentos/video/*').as(ALIAS.verVideoMonitoramento);
+}
+
