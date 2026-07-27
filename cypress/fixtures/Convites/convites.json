@@ -1,0 +1,22 @@
+{
+    "novoConviteValido": {
+        "cpfCnpj": "45678901249",
+        "nome": "Usuário Convite Teste",
+        "email": "convite.teste@kingcq.com"
+    },
+    "novoConviteCnpj": {
+        "cpfCnpj": "11222333000181",
+        "nome": "Empresa Convite Teste Ltda",
+        "email": "empresa.convite@kingcq.com"
+    },
+    "conviteInvalido": {
+        "cpfCnpj": "00000000000",
+        "nome": "",
+        "email": "email-invalido"
+    },
+    "mensagens": {
+        "tituloPagina": "Convites",
+        "sucessoCadastro": "Convite enviado com sucesso",
+        "erroCamposObrigatorios": "Preencha os campos obrigatórios"
+    }
+}
