@@ -18,5 +18,10 @@ declare namespace Cypress {
      * Navega até a página de Grupos.
      */
     navegarParaGrupos(): Chainable<void>;
+
+    /**
+     * Navega até a página de Regras (Controle → Regras) via navbar.
+     */
+    navegarParaRegras(): Chainable<void>;
   }
 }

@@ -20,7 +20,10 @@ describe('Grupos - Cadastrar Grupo', () => {
     beforeEach(() => {
         cy.loginPadrao();
         setupGruposIntercepts();
-        cy.visit('/grupos/nova-area/create');
+        // Chega na tela de cadastro como um usuário: Cadastros → Grupos → "Cadastrar grupo"
+        cy.navegarParaGrupos();
+        GruposPage.clicarCadastrarGrupo();
+        CadastrarGrupoPage.getTituloPagina().should('contain', 'Cadastrar grupo');
     });
 
     // ══════════════════════════════════════════════
