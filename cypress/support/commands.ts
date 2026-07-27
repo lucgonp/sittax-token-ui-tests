@@ -1,7 +1,31 @@
 /// <reference types="cypress" />
 
 import { LoginPage } from '../page-objects/Login/LoginPage';
+import { Navbar } from '../page-objects/Navbar';
 import { setupLoginIntercepts } from './api-intercepts';
+
+/**
+ * Fecha o modal "Novidade!" que aparece na dashboard logo após o login e cobre a
+ * navbar (impedindo a navegação pelo menu). Como ele renderiza de forma assíncrona,
+ * fazemos um poll curto: assim que aparecer, fechamos; se não aparecer, seguimos.
+ */
+function fecharModalNovidades(tentativas = 4): void {
+    cy.get('body').then(($b) => {
+        const aberto = $b.find(':contains("Novidade!")').filter(':visible').length > 0;
+        if (aberto) {
+            cy.get('body').contains('button', '✕').click({ force: true });
+            cy.get('body').should(($b2) => {
+                expect(
+                    $b2.find(':contains("Novidade!")').filter(':visible').length,
+                    'modal Novidade! fechado',
+                ).to.eq(0);
+            });
+        } else if (tentativas > 0) {
+            cy.wait(250);
+            fecharModalNovidades(tentativas - 1);
+        }
+    });
+}
 
 /**
  * Realiza login na aplicação Sittax Token.
@@ -39,6 +63,14 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
             cacheAcrossSpecs: true,
         },
     );
+
+    // Entra no app após autenticar: carrega o dashboard (home pós-login) para que a
+    // navbar fique disponível. A partir daqui os testes navegam clicando no menu
+    // (ver page-objects/Navbar.ts) em vez de usar cy.visit() com a rota.
+    cy.visit('/dashboard');
+    cy.get('nav.nd-navbar', { timeout: 20000 }).should('be.visible');
+    // Fecha o modal de novidades (se surgir) para não bloquear a navegação pelo menu.
+    fecharModalNovidades();
 });
 
 /**
@@ -57,8 +89,9 @@ Cypress.Commands.add('loginPadrao', () => {
  * Usa o título da barra de página (não o link oculto da navbar).
  */
 Cypress.Commands.add('navegarParaGrupos', () => {
-    cy.visit('/grupos');
-    cy.get('.nd-title-bar__left [role="heading"]', { timeout: 15000 })
+    Navbar.cadastros('Grupos');
+    cy.get('.nd-title-bar .h1, .nd-title-bar__title, .nd-title-bar__left [role="heading"], h1', { timeout: 15000 })
         .should('be.visible')
         .and('contain', 'Grupos');
 });
+

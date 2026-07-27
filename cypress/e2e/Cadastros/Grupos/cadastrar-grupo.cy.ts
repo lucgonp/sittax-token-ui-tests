@@ -17,16 +17,10 @@ import { setupGruposIntercepts, ALIAS } from '../../../support/api-intercepts';
  */
 describe('Grupos - Cadastrar Grupo', () => {
 
-    before(() => {
+    beforeEach(() => {
         cy.loginPadrao();
         setupGruposIntercepts();
-        cy.navegarParaGrupos();
-        cy.wait(`@${ALIAS.listarGrupos}`);
-    });
-
-    beforeEach(() => {
-        // Intercepts são resetados entre testes; re-registra para os cy.wait por teste
-        setupGruposIntercepts();
+        cy.visit('/grupos/nova-area/create');
     });
 
     // ══════════════════════════════════════════════
@@ -36,11 +30,14 @@ describe('Grupos - Cadastrar Grupo', () => {
     describe('Navegação para a tela de cadastro', () => {
 
         it('Deve navegar para a tela de cadastro ao clicar em "Cadastrar grupo"', () => {
+            cy.navegarParaGrupos();
+            cy.wait(`@${ALIAS.listarGrupos}`);
             GruposPage.clicarCadastrarGrupo();
             cy.url({ timeout: 10000 }).should('include', '/grupos/nova-area/create');
             CadastrarGrupoPage.getTituloPagina().should('contain', 'Cadastrar grupo');
         });
     });
+
 
     // ══════════════════════════════════════════════
     //  EXIBIÇÃO DO FORMULÁRIO

@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { ImportacoesPage } from '../../../page-objects/Controle/Importacoes/ImportacoesPage';
+import { Navbar } from '../../../page-objects/Navbar';
 import { setupLoginIntercepts, setupImportacoesIntercepts, ALIAS } from '../../../support/api-intercepts';
 
 describe('Controle - Tela de Importações (/controle/importacoes)', () => {
@@ -26,19 +27,19 @@ describe('Controle - Tela de Importações (/controle/importacoes)', () => {
     describe('Exibição da Página e Elementos Iniciais', () => {
 
         it('Deve carregar a rota /controle/importacoes com status HTTP 200', () => {
-            cy.visit('/controle/importacoes');
+            Navbar.controle('Importações');
             cy.wait(`@${ALIAS.paginaImportacoes}`).its('response.statusCode').should('be.oneOf', [200, 304]);
             ImportacoesPage.getTitulo().should('be.visible').and('contain.text', 'Importações');
         });
 
         it('Deve renderizar os elementos da barra de ações (Busca e Filtro)', () => {
-            cy.visit('/controle/importacoes');
+            Navbar.controle('Importações');
             ImportacoesPage.getCampoBusca().should('be.visible');
             ImportacoesPage.getBotaoFiltro().should('be.visible');
         });
 
         it('Deve exibir a tabela de importações com as colunas esperadas', () => {
-            cy.visit('/controle/importacoes');
+            Navbar.controle('Importações');
             ImportacoesPage.getTabelaImportacoes().within(() => {
                 cy.contains('th, td, div', 'Importados').should('be.visible');
                 cy.contains('th, td, div', 'Pendentes').should('be.visible');
@@ -60,7 +61,7 @@ describe('Controle - Tela de Importações (/controle/importacoes)', () => {
     describe('Busca e Filtros com Interceptação de API', () => {
 
         beforeEach(() => {
-            cy.visit('/controle/importacoes');
+            Navbar.controle('Importações');
             ImportacoesPage.fecharModalAbertoSeExistir();
         });
 
@@ -88,7 +89,7 @@ describe('Controle - Tela de Importações (/controle/importacoes)', () => {
     describe('Validação das Ações do Menu da Tabela de Importações', () => {
 
         beforeEach(() => {
-            cy.visit('/controle/importacoes');
+            Navbar.controle('Importações');
             ImportacoesPage.fecharModalAbertoSeExistir();
         });
 

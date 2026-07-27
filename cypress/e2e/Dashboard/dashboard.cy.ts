@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { DashboardPage } from '../../page-objects/Dashboard/DashboardPage';
+import { Navbar } from '../../page-objects/Navbar';
 import { setupDashboardIntercepts, ALIAS } from '../../support/api-intercepts';
 
 describe('Sittax Token - Dashboard', () => {
@@ -25,7 +26,7 @@ describe('Sittax Token - Dashboard', () => {
 
         beforeEach(() => {
             cy.logar(loginData.validUser.email, loginData.validUser.password);
-            cy.visit('/dashboard');
+            Navbar.dashboard();
             DashboardPage.fecharModalNovidadesSeExistir();
         });
 
@@ -89,7 +90,7 @@ describe('Sittax Token - Dashboard', () => {
 
         beforeEach(() => {
             cy.logar(loginData.validUser.email, loginData.validUser.password);
-            cy.visit('/dashboard');
+            Navbar.dashboard();
             DashboardPage.fecharModalNovidadesSeExistir();
         });
 

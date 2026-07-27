@@ -71,6 +71,21 @@ export const ALIAS = {
     listarImportacoes: 'listarImportacoesRequest',
     exportarImportacao: 'exportarImportacaoRequest',
     excluirImportacao: 'excluirImportacaoRequest',
+
+    // Convites (Controle)
+    paginaConvites: 'paginaConvites',
+    listarConvites: 'listarConvitesRequest',
+    criarConvite: 'criarConviteRequest',
+    salvarConvite: 'salvarConviteRequest',
+    reenviarConvite: 'reenviarConviteRequest',
+    excluirConvite: 'excluirConviteRequest',
+    exportarConvites: 'exportarConvitesRequest',
+
+    // Monitoramento (Controle)
+    paginaMonitoramentos: 'paginaMonitoramentos',
+    listarMonitoramentos: 'listarMonitoramentosRequest',
+    exportarMonitoramentos: 'exportarMonitoramentosRequest',
+    verVideoMonitoramento: 'verVideoMonitoramentoRequest',
 } as const;
 
 /**
@@ -198,3 +213,38 @@ export function setupImportacoesIntercepts(): void {
     // DELETE - Excluir importação
     cy.intercept({ method: 'DELETE', url: '**/controle/importacoes/*' }).as(ALIAS.excluirImportacao);
 }
+
+/**
+ * Registra intercepts para as requisições da tela de Convites (/controle/convites).
+ */
+export function setupConvitesIntercepts(): void {
+    // GET - Página HTML de convites
+    cy.intercept('GET', '**/controle/convites').as(ALIAS.paginaConvites);
+    // POST - Listagem, busca e paginação
+    cy.intercept('POST', '**/controle/convites/nova-area/search*').as(ALIAS.listarConvites);
+    // GET - Tela de cadastro de convite
+    cy.intercept('GET', '**/controle/convites/create*').as(ALIAS.criarConvite);
+    // POST - Submeter cadastro de convite
+    cy.intercept('POST', '**/controle/convites/create*').as(ALIAS.salvarConvite);
+    // POST/GET - Reenviar convite
+    cy.intercept({ url: '**/controle/convites/*/resend*' }).as(ALIAS.reenviarConvite);
+    // DELETE/POST - Excluir / Cancelar convite
+    cy.intercept({ url: '**/controle/convites/*' }).as(ALIAS.excluirConvite);
+    // GET - Exportar convites
+    cy.intercept('GET', '**/controle/convites/export*').as(ALIAS.exportarConvites);
+}
+
+/**
+ * Registra intercepts para as requisições da tela de Monitoramento (/controle/monitoramentos/nova-area).
+ */
+export function setupMonitoramentosIntercepts(): void {
+    // GET - Página HTML de monitoramento
+    cy.intercept('GET', '**/controle/monitoramentos/nova-area*').as(ALIAS.paginaMonitoramentos);
+    // POST - Listagem, busca, paginação e atualização
+    cy.intercept('POST', '**/controle/monitoramentos/nova-area/search*').as(ALIAS.listarMonitoramentos);
+    // GET - Exportar monitoramentos
+    cy.intercept('GET', '**/controle/monitoramentos/export*').as(ALIAS.exportarMonitoramentos);
+    // GET - Ver vídeo/gravação de monitoramento
+    cy.intercept('GET', '**/controle/monitoramentos/video/*').as(ALIAS.verVideoMonitoramento);
+}
+
