@@ -70,13 +70,19 @@ describe('Controle - Tela de Monitoramento (/controle/monitoramentos/nova-area)'
         });
 
         it('Deve pesquisar por usuário no campo de busca e interceptar POST /search', () => {
+            // Alias FRESCO: registrado após a carga da página, casa só o request da BUSCA
+            // (evita falso-positivo com o POST /search disparado ao abrir a tela).
+            cy.intercept('POST', '**/controle/monitoramentos/nova-area/search*').as('buscaMonitoramento');
             MonitoramentoPage.buscarPorTermo(monitoramentoFixture.busca.usuarioValido);
-            cy.wait(`@${ALIAS.listarMonitoramentos}`, { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
+            cy.wait('@buscaMonitoramento', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
         });
 
-        it('Deve clicar no botão Atualizar e interceptar a requisição de atualização', () => {
+        it('Deve clicar no botão Atualizar e disparar nova requisição de listagem', () => {
+            // Alias FRESCO → garante que o POST /search casado é o do CLIQUE em Atualizar,
+            // não o da carga inicial da página.
+            cy.intercept('POST', '**/controle/monitoramentos/nova-area/search*').as('refreshMonitoramento');
             MonitoramentoPage.getBotaoAtualizar().click({ force: true });
-            cy.wait(`@${ALIAS.listarMonitoramentos}`, { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
+            cy.wait('@refreshMonitoramento', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
         });
 
         it('Deve abrir o painel de filtros, preencher o intervalo de datas e aplicar', () => {
@@ -86,24 +92,33 @@ describe('Controle - Tela de Monitoramento (/controle/monitoramentos/nova-area)'
             MonitoramentoPage.getInputDataInicioFiltro().type(monitoramentoFixture.busca.dataInicio);
             MonitoramentoPage.getInputDataFimFiltro().type(monitoramentoFixture.busca.dataFim);
 
+            cy.intercept('POST', '**/controle/monitoramentos/nova-area/search*').as('aplicarFiltro');
             MonitoramentoPage.getBotaoAplicarFiltro().click({ force: true });
-            cy.wait(`@${ALIAS.listarMonitoramentos}`, { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
+            cy.wait('@aplicarFiltro', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
         });
 
         it('Deve permitir limpar os filtros do painel', () => {
             MonitoramentoPage.getBotaoFiltro().click({ force: true });
             MonitoramentoPage.getPainelFiltro().should('be.visible');
 
+            cy.intercept('POST', '**/controle/monitoramentos/nova-area/search*').as('limparFiltro');
             MonitoramentoPage.getBotaoLimparFiltro().click({ force: true });
-            cy.wait(`@${ALIAS.listarMonitoramentos}`, { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
+            cy.wait('@limparFiltro', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
         });
 
-        it('Deve acionar o botão de exportar relatório e validar o comportamento', () => {
+        it('Deve clicar em Relatório e baixar o arquivo monitoramento.xlsx', () => {
+            // O "Relatório" faz GET /controle/monitoramentos/export (200) e baixa um .xlsx
+            // (comprovado por diagnóstico: sem window.open, arquivo monitoramento.xlsx gerado).
+            cy.task('deleteDownloads');
+            cy.intercept('GET', '**/controle/monitoramentos/export*').as('exportMonitoramento');
             MonitoramentoPage.getBotaoExportar().click({ force: true });
-            cy.wait(`@${ALIAS.exportarMonitoramentos}`, { timeout: 10000 }).then((interception) => {
-                if (interception && interception.response) {
-                    expect(interception.response.statusCode).to.be.oneOf([200, 304, 400, 404, 500]);
-                }
+
+            cy.wait('@exportMonitoramento', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
+
+            const arquivo = `${Cypress.config('downloadsFolder')}/monitoramento.xlsx`;
+            cy.readFile(arquivo, 'binary', { timeout: 15000 }).should((conteudo) => {
+                expect(conteudo.length, 'tamanho do .xlsx').to.be.greaterThan(0);
+                expect(conteudo.slice(0, 2), 'assinatura ZIP do xlsx').to.eq('PK');
             });
         });
     });
@@ -129,22 +144,18 @@ describe('Controle - Tela de Monitoramento (/controle/monitoramentos/nova-area)'
         });
 
 
-        it('Read / Gravação: Deve verificar o botão de gravação nas linhas da tabela se houver resultados', () => {
-            cy.get('body').then(($body) => {
-                if ($body.find('button.nd-btn-gravacao').length > 0) {
-                    cy.get('button.nd-btn-gravacao').first().should('be.visible').and('have.attr', 'data-video-url');
-                    MonitoramentoPage.clicarVerGravacao(0);
+        it('Deve abrir a gravação (modal + vídeo) ao clicar no botão de gravação da linha', () => {
+            // Clicar em .nd-btn-gravacao abre um modal com a gravação e dispara
+            // GET /controle/monitoramentos/video/{id} (200) — comprovado por diagnóstico.
+            cy.intercept('GET', '**/controle/monitoramentos/video/*').as('videoMonitoramento');
+            MonitoramentoPage.getLinhasTabela().should('have.length.greaterThan', 0);
+            MonitoramentoPage.getBotaoVerGravacao(0).should('have.attr', 'data-video-url');
 
-                    // Valida requisição HTTP de vídeo ou abertura do modal de mídia
-                    cy.wait(`@${ALIAS.verVideoMonitoramento}`, { timeout: 5000 }).then((interception) => {
-                        if (interception && interception.response) {
-                            expect(interception.response.statusCode).to.be.oneOf([200, 304, 400, 404, 500]);
-                        }
-                    });
-                } else {
-                    cy.log('Sem botões de gravação ativos na tabela de monitoramentos');
-                }
-            });
+            MonitoramentoPage.clicarVerGravacao(0);
+
+            // A gravação abre num modal e o vídeo é requisitado ao servidor
+            cy.wait('@videoMonitoramento', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 206, 304]);
+            cy.get('.fly-dialog--active, [role="dialog"]', { timeout: 10000 }).should('be.visible');
         });
 
         it('Read / Empty State: Deve exibir a mensagem de lista vazia ao buscar um termo inexistente', () => {
