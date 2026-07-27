@@ -65,6 +65,12 @@ export const ALIAS = {
     excluirCertificadoForm: 'excluirCertificadoFormRequest',
     excluirCertificadoPost: 'excluirCertificadoPostRequest',
     exportarCertificados: 'exportarCertificadosRequest',
+
+    // Importações (Controle)
+    paginaImportacoes: 'paginaImportacoes',
+    listarImportacoes: 'listarImportacoesRequest',
+    exportarImportacao: 'exportarImportacaoRequest',
+    excluirImportacao: 'excluirImportacaoRequest',
 } as const;
 
 /**
@@ -176,4 +182,18 @@ export function setupCertificadosIntercepts(): void {
     cy.intercept('DELETE', /\/controle\/certificados\/\d+/).as(ALIAS.excluirCertificadoPost);
     // GET - Exportar certificados
     cy.intercept('GET', '**/controle/certificados/export*').as(ALIAS.exportarCertificados);
+}
+
+/**
+ * Registra intercepts para as requisições da tela de Importações (/controle/importacoes).
+ */
+export function setupImportacoesIntercepts(): void {
+    // GET - Página HTML de importações
+    cy.intercept('GET', '**/controle/importacoes').as(ALIAS.paginaImportacoes);
+    // POST - Listagem, busca e paginação
+    cy.intercept('POST', '**/controle/importacoes/nova-area/search*').as(ALIAS.listarImportacoes);
+    // GET - Exportar relatório/detalhes de uma importação
+    cy.intercept('GET', '**/controle/importacoes/export/*').as(ALIAS.exportarImportacao);
+    // DELETE - Excluir importação
+    cy.intercept({ method: 'DELETE', url: '**/controle/importacoes/*' }).as(ALIAS.excluirImportacao);
 }
