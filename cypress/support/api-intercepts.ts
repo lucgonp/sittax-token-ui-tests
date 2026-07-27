@@ -50,6 +50,21 @@ export const ALIAS = {
     atualizarAgente: 'atualizarAgenteRequest',
     excluirAgente: 'excluirAgenteRequest',
     exportarAgentes: 'exportarAgentesRequest',
+
+    // Certificados (Controle)
+    paginaCertificados: 'paginaCertificados',
+    listarCertificados: 'listarCertificadosRequest',
+    criarCertificado: 'criarCertificadoRequest',
+    salvarCertificado: 'salvarCertificadoRequest',
+    editarCertificadoForm: 'editarCertificadoFormRequest',
+    atualizarCertificado: 'atualizarCertificadoRequest',
+    verDadosCertificado: 'verDadosCertificadoRequest',
+    verProcuracoesCert: 'verProcuracoesCertRequest',
+    verSitesCert: 'verSitesCertRequest',
+    compartilharCert: 'compartilharCertRequest',
+    excluirCertificadoForm: 'excluirCertificadoFormRequest',
+    excluirCertificadoPost: 'excluirCertificadoPostRequest',
+    exportarCertificados: 'exportarCertificadosRequest',
 } as const;
 
 /**
@@ -128,5 +143,34 @@ export function setupAgentesIntercepts(): void {
     cy.intercept('DELETE', /\/usuarios\/agentes\/\d+/).as(ALIAS.excluirAgente);
 }
 
-
-
+/**
+ * Registra intercepts para as requisições da tela de Certificados (/controle/certificados).
+ */
+export function setupCertificadosIntercepts(): void {
+    // GET - Página HTML de certificados
+    cy.intercept('GET', '**/controle/certificados').as(ALIAS.paginaCertificados);
+    // POST - Listagem, busca e paginação
+    cy.intercept('POST', '**/controle/certificados/nova-area/search*').as(ALIAS.listarCertificados);
+    // GET - Tela de cadastro/upload
+    cy.intercept('GET', '**/controle/certificados/create*').as(ALIAS.criarCertificado);
+    // POST - Submeter upload de certificado
+    cy.intercept('POST', '**/controle/certificados/create*').as(ALIAS.salvarCertificado);
+    // GET - Tela de edição
+    cy.intercept('GET', '**/controle/certificados/update/*').as(ALIAS.editarCertificadoForm);
+    // POST - Submeter edição de certificado
+    cy.intercept('POST', '**/controle/certificados/update/*').as(ALIAS.atualizarCertificado);
+    // GET - Ver dados do certificado
+    cy.intercept('GET', '**/controle/certificados/view-data/*').as(ALIAS.verDadosCertificado);
+    // GET - Ver procurações do certificado
+    cy.intercept('GET', /\/controle\/certificados\/.*\/procuracoes/).as(ALIAS.verProcuracoesCert);
+    // GET - Ver sites/acessos do certificado
+    cy.intercept('GET', '**/controle/certificados/sites/*').as(ALIAS.verSitesCert);
+    // GET - Compartilhar certificado
+    cy.intercept('GET', '**/controle/certificados/doubleForm/*').as(ALIAS.compartilharCert);
+    // GET - Form de exclusão
+    cy.intercept('GET', '**/controle/certificados/deleteForm/*').as(ALIAS.excluirCertificadoForm);
+    // DELETE - Excluir certificado
+    cy.intercept('DELETE', /\/controle\/certificados\/\d+/).as(ALIAS.excluirCertificadoPost);
+    // GET - Exportar certificados
+    cy.intercept('GET', '**/controle/certificados/export*').as(ALIAS.exportarCertificados);
+}

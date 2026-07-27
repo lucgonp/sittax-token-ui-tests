@@ -1,0 +1,181 @@
+/**
+ * Page Object para a tela de Controle de Certificados (/controle/certificados).
+ * Encapsula os seletores e ações baseados no DOM real da aplicação Sittax Token.
+ */
+export const CertificadosPage = {
+
+    // ══════════════════════════════════════════════
+    //  SELETORES DA LISTAGEM
+    // ══════════════════════════════════════════════
+
+    /** Título principal da página de Certificados */
+    getTitulo: () => cy.get('.nd-title-bar .h1, .nd-title-bar__title', { timeout: 15000 }),
+
+    /** Botão "Cadastrar certificado" na barra de ações superior */
+    getBotaoCadastrarCertificado: () => cy.get('a[href*="/controle/certificados/create"], a.nd-btn-primary', { timeout: 15000 }),
+
+    /** Campo de busca por nome ou CNPJ do certificado */
+    getCampoBusca: () => cy.get('#nd-cert-search', { timeout: 15000 }),
+
+    /** Botão de alternar o painel de filtros */
+    getBotaoFiltro: () => cy.get('#filter-toggle-nd-cert-filter, button.nd-action-bar__filter', { timeout: 15000 }),
+
+    /** Botão de exportação "Relatório" */
+    getBotaoExportar: () => cy.get('#nd-cert-export-btn', { timeout: 15000 }),
+
+    /** Tabela principal de certificados */
+    getTabelaCertificados: () => cy.get('table.nd-table', { timeout: 15000 }),
+
+    /** Botão Ações de uma linha da tabela */
+    getBotaoAcoes: (index = 0) => cy.get('table.nd-table [data-dt-action-trigger]', { timeout: 15000 }).eq(index),
+
+    /** Paginação - contagem de resultados */
+    getContadorResultados: () => cy.get('.nd-pagination__count', { timeout: 15000 }),
+
+    // ══════════════════════════════════════════════
+    //  SELETORES DO FORMULÁRIO DE UPLOAD
+    // ══════════════════════════════════════════════
+
+    /** Input de arquivo do certificado (.pfx/.p12) */
+    getCampoArquivo: () => cy.get('#certificado', { timeout: 15000 }),
+
+    /** Input de senha do certificado */
+    getCampoSenha: () => cy.get('#senha', { timeout: 15000 }),
+
+    /** Input de arquivo de senhas (opcional) */
+    getCampoArquivoSenhas: () => cy.get('#senhas', { timeout: 15000 }),
+
+    /** Input de apelido (opcional) */
+    getCampoApelido: () => cy.get('#apelido', { timeout: 15000 }),
+
+    /** Input de contato/telefone (opcional) */
+    getCampoContato: () => cy.get('#telefone', { timeout: 15000 }),
+
+    /** Input de e-mail (opcional) */
+    getCampoEmail: () => cy.get('#email', { timeout: 15000 }),
+
+    /** Botão "Confirmar" (submit) nos formulários */
+    getBotaoConfirmar: () => cy.get('button.nd-action-bar__submit', { timeout: 15000 }),
+
+    /** Link "Cancelar" nos formulários */
+    getBotaoCancelar: () => cy.get('a.nd-action-bar__cancel', { timeout: 15000 }),
+
+    // ══════════════════════════════════════════════
+    //  SELETORES DO MODAL DE EXCLUSÃO
+    // ══════════════════════════════════════════════
+
+    /** Container do modal de confirmação de exclusão */
+    getModalExclusao: () => cy.get('.fly-cnpj-confirm', { timeout: 15000 }),
+
+    /** Título do modal de exclusão */
+    getTituloModalExclusao: () => cy.get('.fly-cnpj-confirm__title', { timeout: 15000 }),
+
+    /** Input de CNPJ no modal de exclusão */
+    getCampoCnpjExclusao: () => cy.get('.fly-cnpj-confirm__input', { timeout: 15000 }),
+
+    /** Botão "Continuar com a exclusão" no modal */
+    getBotaoConfirmarExclusao: () => cy.get('.fly-cnpj-confirm__confirm', { timeout: 15000 }),
+
+    /** Botão "Cancelar" no modal de exclusão */
+    getBotaoCancelarExclusao: () => cy.get('.fly-cnpj-confirm__cancel', { timeout: 15000 }),
+
+    /** Checkbox "Forçar exclusão" no modal */
+    getCheckboxForcarExclusao: () => cy.get('input.fly-cnpj-confirm__checkbox-input', { timeout: 15000 }),
+
+    // ══════════════════════════════════════════════
+    //  AÇÕES E MÉTODOS AUXILIARES
+    // ══════════════════════════════════════════════
+
+    /** Abre o menu Ações da linha indicada */
+    abrirMenuAcoes: (rowIndex = 0) => {
+        cy.get('table.nd-table', { timeout: 15000 }).should('be.visible');
+        CertificadosPage.fecharModalAbertoSeExistir();
+        CertificadosPage.getBotaoAcoes(rowIndex).should('be.visible').click({ force: true });
+    },
+
+    /** Clica em um item do menu Ações visível pelo texto */
+    clicarAcaoPorTexto: (texto: string) => {
+        cy.get('.nd-table-action-menu:visible, [data-dt-action-panel]:visible, [role="menu"]:visible', { timeout: 15000 })
+            .find('button, a')
+            .filter(':visible')
+            .contains(texto)
+            .click({ force: true });
+    },
+
+    /** Clica em uma ação pelo data-dt-action-key (ex: 'show', 'edit', 'delete') */
+    clicarAcaoPorKey: (actionKey: string) => {
+        cy.get('.nd-table-action-menu.nd-pop--open', { timeout: 15000 })
+            .last()
+            .find(`[data-dt-action-key="${actionKey}"]`)
+            .click({ force: true });
+    },
+
+    // ══════════════════════════════════════════════
+    //  MÉTODOS DE CRUD
+    // ══════════════════════════════════════════════
+
+    /**
+     * Faz upload de um certificado .pfx/.p12.
+     * Usa cy.selectFile() para anexar o arquivo ao input file.
+     */
+    uploadCertificado: (caminhoFixture: string, senha: string, apelido?: string) => {
+        CertificadosPage.getCampoArquivo().selectFile(`cypress/fixtures/${caminhoFixture}`, { force: true });
+        CertificadosPage.getCampoSenha().clear().type(senha);
+        if (apelido) {
+            CertificadosPage.getCampoApelido().clear().type(apelido);
+        }
+    },
+
+    /** Clica no botão "Confirmar" para submeter o formulário */
+    clicarConfirmar: () => {
+        CertificadosPage.getBotaoConfirmar().should('be.visible').click({ force: true });
+    },
+
+    /**
+     * Confirma a exclusão de um certificado digitando o CNPJ e clicando "Continuar com a exclusão".
+     * O botão de exclusão fica desabilitado até o CNPJ correto ser digitado.
+     */
+    confirmarExclusaoPorCnpj: (cnpj: string) => {
+        CertificadosPage.getModalExclusao().should('be.visible');
+        CertificadosPage.getCampoCnpjExclusao().should('be.visible').clear().type(cnpj);
+        CertificadosPage.getBotaoConfirmarExclusao().should('not.be.disabled').click({ force: true });
+    },
+
+    /** Pesquisa um certificado pelo termo no campo de busca */
+    buscarCertificadoPorTermo: (termo: string) => {
+        CertificadosPage.getCampoBusca()
+            .should('be.visible')
+            .focus()
+            .type(`{selectall}${termo}{enter}`, { force: true });
+    },
+
+    /** Fecha o modal de novidades caso ele apareça */
+    fecharModalNovidadesSeExistir: () => {
+        cy.get('body', { timeout: 10000 }).then(($body) => {
+            if ($body.text().includes('Novidade!')) {
+                cy.get('body').contains('button', '✕').click({ force: true });
+            }
+        });
+    },
+
+    /** Fecha modal ou drawer aberto na tela se existir */
+    fecharModalAbertoSeExistir: () => {
+        cy.get('body').then(($body) => {
+            if ($body.find('.fly-dialog, .fly-cnpj-confirm, [role="dialog"], .modal, .nd-drawer').length > 0) {
+                cy.get('body').then(($b) => {
+                    if ($b.find('button.fly-cnpj-confirm__cancel').length > 0) {
+                        cy.get('button.fly-cnpj-confirm__cancel').first().click({ force: true });
+                    } else if ($b.find('button:contains("✕")').length > 0) {
+                        cy.get('button:contains("✕")').first().click({ force: true });
+                    } else if ($b.find('button:contains("Fechar")').length > 0) {
+                        cy.get('button:contains("Fechar")').first().click({ force: true });
+                    } else if ($b.find('button:contains("Cancelar")').length > 0) {
+                        cy.get('button:contains("Cancelar")').first().click({ force: true });
+                    } else {
+                        cy.get('body').type('{esc}');
+                    }
+                });
+            }
+        });
+    }
+};

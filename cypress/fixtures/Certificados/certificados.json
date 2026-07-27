@@ -1,0 +1,11 @@
+{
+    "certificadoTeste": {
+        "arquivo": "Certificados/certificado_teste.pfx",
+        "nomeOriginal": "ESCRITA FINA SERVICOS CONTABEIS S_S LTDA_40229155000119_ValidoAte_22092026_senha1234.pfx",
+        "senha": "1234",
+        "cnpj": "40.229.155/0001-19",
+        "cnpjSemFormatacao": "40229155000119",
+        "razaoSocial": "ESCRITA FINA SERVICOS CONTABEIS",
+        "apelido": "CertTesteAuto"
+    }
+}
