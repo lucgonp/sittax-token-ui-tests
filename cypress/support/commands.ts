@@ -59,11 +59,16 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
                 .should('contain', 'Grupos');
         },
         {
-            // Revalida a sessão restaurada do cache: se o cookie de auth expirou,
-            // /dashboard redireciona para /login e o cy.session refaz o setup.
+            // Revalida a sessão restaurada do cache. IMPORTANTE: o /dashboard devolve
+            // HTML 200 mesmo deslogado (só a chamada de DADOS responde 401 e as páginas
+            // protegidas redirecionam para /login depois). Por isso checar apenas a URL
+            // não detecta a sessão expirada. Validamos pelo status do POST de dados do
+            // dashboard: se não for 200, o cy.session refaz o login por UI.
             validate() {
+                cy.intercept('POST', '**/dashboard/nova-area/search*').as('validaSessao');
                 cy.visit('/dashboard');
                 cy.url().should('not.include', '/login');
+                cy.wait('@validaSessao', { timeout: 15000 }).its('response.statusCode').should('eq', 200);
             },
             cacheAcrossSpecs: true,
         },
