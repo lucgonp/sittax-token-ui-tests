@@ -22,8 +22,29 @@ export const Navbar = {
     /** Garante que o app está carregado (navbar visível) */
     deveEstarCarregada: () => Navbar.get().should('be.visible'),
 
+    /**
+     * Fecha o modal "Novidade!" (`.fly-aviso`) se estiver cobrindo a navbar.
+     * Ele reaparece SEMPRE que se aterrissa na dashboard (não só no login), então
+     * chamamos antes de qualquer interação com o menu — senão o hover/click no
+     * dropdown falha o actionability check (elemento coberto, z-index 1000).
+     */
+    fecharAvisoSeAberto: () => {
+        cy.get('body').then(($b) => {
+            if ($b.find('.fly-aviso').filter(':visible').length > 0) {
+                cy.get('.fly-aviso .fly-dialog__close, .fly-aviso [data-dialog-close="true"]', { timeout: 8000 })
+                    .first()
+                    .click({ force: true });
+                cy.get('body').should(($b2) => {
+                    const $a = $b2.find('.fly-aviso');
+                    expect($a.length === 0 || $a.filter(':visible').length === 0, 'modal Novidade! fechado').to.eq(true);
+                });
+            }
+        });
+    },
+
     /** Clica num item direto do menu (ex.: "Dashboard") */
     irParaItem: (texto: string) => {
+        Navbar.fecharAvisoSeAberto();
         Navbar.get().find('a.nd-navbar__item').contains(texto.trim()).click();
     },
 
@@ -34,6 +55,8 @@ export const Navbar = {
      * @param item  texto do link dentro do painel (ex.: "Certificados")
      */
     navegar: (menu: string, item: string) => {
+        // O modal "Novidade!" cobre a navbar ao aterrissar na dashboard — fecha antes.
+        Navbar.fecharAvisoSeAberto();
         Navbar.get()
             .contains('.nd-nav-dropdown button.nd-navbar__item', menu.trim())
             .closest('.nd-nav-dropdown')
