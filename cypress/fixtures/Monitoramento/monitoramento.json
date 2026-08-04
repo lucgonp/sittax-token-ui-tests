@@ -5,7 +5,9 @@
         "termoInexistente": "UsuarioInexistente99999XYZ",
         "certificadoFiltro": "BYTOKEN SISTEMAS LTDA",
         "dataInicio": "2026-05-01",
-        "dataFim": "2026-05-31"
+        "dataFim": "2026-05-13",
+        "dataInicioBr": "01/05/2026",
+        "dataFimBr": "13/05/2026"
     },
     "textos": {
         "tituloPagina": "Monitoramento",

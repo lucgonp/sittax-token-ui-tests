@@ -84,6 +84,33 @@ export const MonitoramentoPage = {
         MonitoramentoPage.getBotaoVerGravacao(rowIndex).should('be.visible').click({ force: true });
     },
 
+    /** Extrai os registros visíveis na tabela da tela */
+    extrairDadosTabelaTela: () => {
+        const registros: Array<{
+            usuario: string;
+            apelido: string;
+            certificado: string;
+            siteAplicacao: string;
+            dataAcesso: string;
+        }> = [];
+
+        return cy.get('table.nd-table tbody tr').then(($rows) => {
+            $rows.each((_, row) => {
+                const $tds = Cypress.$(row).find('td');
+                if ($tds.length >= 5) {
+                    registros.push({
+                        usuario: Cypress.$($tds[0]).text().trim(),
+                        apelido: Cypress.$($tds[1]).text().trim(),
+                        certificado: Cypress.$($tds[2]).text().trim(),
+                        siteAplicacao: Cypress.$($tds[3]).text().trim(),
+                        dataAcesso: Cypress.$($tds[4]).text().trim(),
+                    });
+                }
+            });
+            return registros;
+        });
+    },
+
     /** Fecha qualquer modal/dialog/drawer aberto se existir */
     fecharModalAbertoSeExistir: () => {
         cy.get('body').then(($body) => {

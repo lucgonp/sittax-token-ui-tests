@@ -39,6 +39,20 @@ export default defineConfig({
           const dir = config.downloadsFolder || 'cypress/downloads';
           return fs.existsSync(dir) ? fs.readdirSync(dir) : [];
         },
+        // Lê e faz o parse de arquivo .xlsx baixado
+        parseXlsx(filePath: string) {
+          const fs = require('fs');
+          const XLSX = require('xlsx');
+          if (!fs.existsSync(filePath)) {
+            throw new Error(`Arquivo não encontrado: ${filePath}`);
+          }
+          const workbook = XLSX.readFile(filePath, { cellDates: false });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const rowsObj = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' });
+          const rowsArray = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+          return { sheetName, rowsObj, rowsArray };
+        },
       });
       return config;
     },

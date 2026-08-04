@@ -71,7 +71,12 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
                 cy.intercept('POST', '**/dashboard/nova-area/search*').as('validaSessao');
                 cy.visit('/dashboard');
                 cy.url().should('not.include', '/login');
-                cy.wait('@validaSessao', { timeout: 15000 }).its('response.statusCode').should('eq', 200);
+                cy.wait('@validaSessao', { timeout: 15000 }).then((xhr) => {
+                    if (!xhr.response || xhr.response.statusCode === 401) {
+                        throw new Error('Sessão expirada no cache de cy.session');
+                    }
+                    expect(xhr.response.statusCode).to.be.oneOf([200, 304]);
+                });
             },
             cacheAcrossSpecs: true,
         },

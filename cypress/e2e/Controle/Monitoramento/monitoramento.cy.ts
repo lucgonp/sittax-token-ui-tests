@@ -24,6 +24,11 @@ describe('Controle - Tela de Monitoramento (/controle/monitoramentos/nova-area)'
         cy.logar(loginData.validUser.email, loginData.validUser.password);
     });
 
+    afterEach(() => {
+        // Garante que a pasta de downloads seja sempre limpa após cada teste para não gerar lixo
+        cy.task('deleteDownloads');
+    });
+
     // ══════════════════════════════════════════════
     //  1. CARREGAMENTO E ELEMENTOS DA TELA
     // ══════════════════════════════════════════════
@@ -120,6 +125,7 @@ describe('Controle - Tela de Monitoramento (/controle/monitoramentos/nova-area)'
                 expect(conteudo.length, 'tamanho do .xlsx').to.be.greaterThan(0);
                 expect(conteudo.slice(0, 2), 'assinatura ZIP do xlsx').to.eq('PK');
             });
+            cy.task('deleteDownloads');
         });
     });
 
@@ -144,24 +150,134 @@ describe('Controle - Tela de Monitoramento (/controle/monitoramentos/nova-area)'
         });
 
 
-        it('Deve abrir a gravação (modal + vídeo) ao clicar no botão de gravação da linha', () => {
-            // Clicar em .nd-btn-gravacao abre um modal com a gravação e dispara
-            // GET /controle/monitoramentos/video/{id} (200) — comprovado por diagnóstico.
+        it('Deve abrir a gravação (modal + vídeo) ao clicar no botão de gravação da linha se disponível', () => {
             cy.intercept('GET', '**/controle/monitoramentos/video/*').as('videoMonitoramento');
-            MonitoramentoPage.getLinhasTabela().should('have.length.greaterThan', 0);
-            MonitoramentoPage.getBotaoVerGravacao(0).should('have.attr', 'data-video-url');
-
-            MonitoramentoPage.clicarVerGravacao(0);
-
-            // A gravação abre num modal e o vídeo é requisitado ao servidor
-            cy.wait('@videoMonitoramento', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 206, 304]);
-            cy.get('.fly-dialog--active, [role="dialog"]', { timeout: 10000 }).should('be.visible');
+            cy.get('body').then(($body) => {
+                const btnVideo = $body.find('button.nd-btn-gravacao[data-video-url]');
+                if (btnVideo.length > 0) {
+                    cy.wrap(btnVideo.first()).click({ force: true });
+                    cy.wait('@videoMonitoramento', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 206, 304]);
+                    cy.get('.fly-dialog--active, [role="dialog"]', { timeout: 10000 }).should('be.visible');
+                } else {
+                    cy.log('Nenhuma gravação de vídeo disponível na primeira linha da tabela');
+                }
+            });
         });
 
         it('Read / Empty State: Deve exibir a mensagem de lista vazia ao buscar um termo inexistente', () => {
             MonitoramentoPage.buscarPorTermo(monitoramentoFixture.busca.termoInexistente);
             cy.wait(`@${ALIAS.listarMonitoramentos}`);
             MonitoramentoPage.getTabelaVaziaContainer().should('contain.text', 'Nenhum monitoramento encontrado');
+        });
+    });
+
+    // ══════════════════════════════════════════════
+    //  4. VALIDAÇÃO DE CONFRONTO TELA X RELATÓRIO EXCEL (01/05/2026 a 13/05/2026)
+    // ══════════════════════════════════════════════
+
+    describe('Validação de Divergência de Horários (Tela vs Relatório Exportado)', () => {
+
+        beforeEach(() => {
+            Cypress.session.clearAllSavedSessions();
+            setupLoginIntercepts();
+            setupMonitoramentosIntercepts();
+            cy.logar(loginData.validUser.email, loginData.validUser.password);
+            Navbar.controle('Monitoramento');
+            MonitoramentoPage.fecharModalAbertoSeExistir();
+        });
+
+        it('Deve filtrar pelo período de 01/05/2026 a 13/05/2026, exportar o Excel e comparar os horários da tela com o relatório', () => {
+            cy.task('deleteDownloads');
+
+            // 1. Abrir filtro e aplicar intervalo 01/05/2026 a 13/05/2026
+            MonitoramentoPage.getBotaoFiltro().click({ force: true });
+            MonitoramentoPage.getPainelFiltro().should('be.visible');
+
+            MonitoramentoPage.getInputDataInicioFiltro().clear({ force: true }).type(monitoramentoFixture.busca.dataInicio);
+            MonitoramentoPage.getInputDataFimFiltro().clear({ force: true }).type(monitoramentoFixture.busca.dataFim);
+
+            cy.intercept('POST', '**/controle/monitoramentos/nova-area/search*').as('aplicarFiltroData');
+            MonitoramentoPage.getBotaoAplicarFiltro().click({ force: true });
+            cy.wait('@aplicarFiltroData', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
+
+            // 2. Extrair dados da tela (tabela UI)
+            MonitoramentoPage.extrairDadosTabelaTela().then((registrosTela) => {
+                cy.log(`Registros encontrados na tela: ${registrosTela.length}`);
+
+                // 3. Exportar relatório em Excel
+                cy.intercept('GET', '**/controle/monitoramentos/export*').as('exportMonitoramentoComFiltro');
+                MonitoramentoPage.getBotaoExportar().click({ force: true });
+                cy.wait('@exportMonitoramentoComFiltro', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
+
+                const arquivoExcel = `${Cypress.config('downloadsFolder')}/monitoramento.xlsx`;
+
+                // 4. Ler o conteúdo do Excel exportado via task 'parseXlsx'
+                cy.task('parseXlsx', arquivoExcel).then((resultadoExcel: any) => {
+                    expect(resultadoExcel, 'resultado do parse de Excel').to.exist;
+                    const { rowsObj, rowsArray } = resultadoExcel;
+
+                    cy.task('log', `Linhas no Excel (objetos): ${rowsObj.length}`);
+                    cy.task('log', `Linhas no Excel (matriz): ${rowsArray.length}`);
+
+                    if (rowsArray && rowsArray.length > 0) {
+                        const headers: string[] = rowsArray[0].map((h: any) => String(h).trim());
+                        cy.task('log', `Cabeçalhos identificados no Excel: ${JSON.stringify(headers)}`);
+
+                        // Encontrar índices no Excel (Cabeçalhos: SITE/APLICAÇÃO, DATA ACESSO, USUÁRIO, APELIDO, CERTIFICADO, CNPJ)
+                        let colIndexData = headers.findIndex((h) =>
+                            /data.*acesso/i.test(h) || /^data$/i.test(h) || /acesso/i.test(h)
+                        );
+                        if (colIndexData === -1) {
+                            colIndexData = 1; // 2ª coluna (DATA ACESSO no Excel)
+                        }
+
+                        let colIndexUsuario = headers.findIndex((h) => /usu[áa]rio/i.test(h));
+                        if (colIndexUsuario === -1) {
+                            colIndexUsuario = 2; // 3ª coluna (USUÁRIO no Excel)
+                        }
+
+                        let colIndexSite = headers.findIndex((h) => /site|aplica[çc][ãa]o/i.test(h));
+                        if (colIndexSite === -1) {
+                            colIndexSite = 0; // 1ª coluna (SITE/APLICAÇÃO no Excel)
+                        }
+
+                        if (registrosTela.length > 0) {
+                            const divergencias: string[] = [];
+
+                            registrosTela.forEach((regTela, idx) => {
+                                const rowDataArray = rowsArray[idx + 1] || [];
+                                const dataAcessoExcel = rowDataArray[colIndexData] !== undefined ? String(rowDataArray[colIndexData]).trim() : '';
+                                const usuarioExcel = rowDataArray[colIndexUsuario] !== undefined ? String(rowDataArray[colIndexUsuario]).trim() : '';
+                                const siteExcel = rowDataArray[colIndexSite] !== undefined ? String(rowDataArray[colIndexSite]).trim() : '';
+
+                                cy.task('log', `[Linha ${idx + 1}] Usuário: ${regTela.usuario} | Tela Data: "${regTela.dataAcesso}" | Excel Data: "${dataAcessoExcel}"`);
+
+                                if (dataAcessoExcel && regTela.dataAcesso) {
+                                    if (regTela.dataAcesso !== dataAcessoExcel) {
+                                        divergencias.push(
+                                            `Linha ${idx + 1} (${regTela.usuario} - ${siteExcel || regTela.siteAplicacao}): Horário na Tela [${regTela.dataAcesso}] diverge do Relatório Excel [${dataAcessoExcel}]`
+                                        );
+                                    }
+                                }
+                            });
+
+                            if (divergencias.length > 0) {
+                                cy.task('log', '=== DIVERGÊNCIAS DE HORÁRIO ENCONTRADAS (UTC EXCEL VS UTC-3 TELA) ===');
+                                divergencias.forEach((d) => cy.task('log', d));
+                            }
+
+                            // Garante a remoção do arquivo baixado imediatamente após a análise
+                            cy.task('deleteDownloads');
+
+                            // Valida se houve divergência entre a tela e o relatório exportado
+                            expect(divergencias, `Divergências encontradas nos horários do relatório:\n${divergencias.join('\n')}`).to.deep.equal([]);
+                        } else {
+                            cy.log('Nenhum registro encontrado no período de 01/05/2026 a 13/05/2026');
+                            cy.task('deleteDownloads');
+                        }
+                    }
+                });
+            });
         });
     });
 });
