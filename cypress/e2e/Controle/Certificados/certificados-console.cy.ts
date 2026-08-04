@@ -5,16 +5,24 @@ import { Navbar } from '../../../page-objects/Navbar';
 import { setupLoginIntercepts, setupCertificadosIntercepts } from '../../../support/api-intercepts';
 
 /**
- * Verificação do bug de console reportado na tela de cadastro de certificado:
- * `Uncaught TypeError: $(...).mask is not a function` (plugin jQuery Mask ausente).
+ * Verificação do bug #27228: `Uncaught TypeError: $(...).mask is not a function`
+ * na tela de cadastro de certificado (plugin jQuery Mask ausente no layout da
+ * nova área — `resources/views/nova-area/ui/layouts/app.blade.php`).
  *
- * O handler global em `support/e2e.ts` IGNORA esse erro para não derrubar o CRUD;
- * aqui registramos um listener próprio que apenas GRAVA a ocorrência (sem impedir
- * o ignore global), para conseguir afirmar se o defeito ainda acontece.
+ * Cobre os casos de teste 1 e 2 propostos no PR !6132:
+ *   1. abrir a tela e confirmar console sem erro de JavaScript;
+ *   2. telefone fixo (10 dígitos) e celular (11 dígitos) formatados pela máscara.
+ *
+ * O handler global em `support/e2e.ts` pode IGNORAR erros conhecidos da aplicação;
+ * por isso registramos um listener próprio que apenas GRAVA a ocorrência (sem
+ * interferir na decisão do handler global) — é o que permite afirmar se o defeito
+ * ainda acontece em vez de confiar no vermelho/verde do Cypress.
  */
-describe('Controle - Console da tela de cadastro de certificado', () => {
+const achatar = (m: string) => String(m).replace(/\s+/g, ' ').trim().slice(0, 300);
 
-    const errosCapturados: string[] = [];
+describe('Controle - Console e máscaras da tela de cadastro de certificado (#27228)', () => {
+
+    let errosCapturados: string[] = [];
 
     before(() => {
         Cypress.on('uncaught:exception', (err) => {
@@ -24,53 +32,78 @@ describe('Controle - Console da tela de cadastro de certificado', () => {
     });
 
     beforeEach(() => {
+        errosCapturados = [];
         setupLoginIntercepts();
         setupCertificadosIntercepts();
         cy.loginPadrao();
     });
 
-    it('Não deve lançar TypeError de máscara ao abrir /controle/certificados/create', () => {
-        Navbar.controle('Certificados');
-        CertificadosPage.fecharModalNovidadesSeExistir();
-        CertificadosPage.getBotaoCadastrarCertificado().first().click({ force: true });
+    it('Caso 1 - Não deve lançar erro de JavaScript ao abrir /controle/certificados/create', () => {
+        // Atribuição POR TELA: zera a captura antes de cada navegação, senão erros
+        // da listagem/dashboard seriam creditados à tela de cadastro.
+        const porTela: Record<string, string[]> = {};
 
-        cy.url({ timeout: 20000 }).should('include', '/controle/certificados/create');
-        // O formulário renderiza (o erro, se houver, é posterior ao render)
-        CertificadosPage.getCampoArquivo().should('exist');
+        cy.then(() => { errosCapturados = []; });
+        Navbar.controle('Certificados');
+        cy.get('table.nd-table, .nd-title-bar', { timeout: 20000 }).should('exist');
+        cy.wait(1500);
+        cy.then(() => { porTela['listagem /controle/certificados'] = [...errosCapturados]; errosCapturados = []; });
+
+        CertificadosPage.abrirCadastro();
         CertificadosPage.getCampoContato().should('exist');
 
-        // Diagnóstico: o plugin jQuery Mask está de fato carregado na página?
+        // Diagnóstico: os plugins de máscara estão de fato carregados na página?
         cy.window().then((win: any) => {
             const jq = win.jQuery || win.$;
             const temJquery = typeof jq === 'function';
-            const tipoMask = temJquery ? typeof jq.fn?.mask : 'sem jQuery';
             const scripts = Array.from(win.document.querySelectorAll('script[src]'))
                 .map((s: any) => s.src)
                 .filter((src: string) => /mask/i.test(src));
 
-            cy.task('log', `[diag] jQuery presente: ${temJquery} | typeof $.fn.mask: ${tipoMask} | typeof $.fn.maskMoney: ${temJquery ? typeof jq.fn?.maskMoney : '-'}`);
-            cy.task('log', `[diag] scripts com "mask" no src: ${scripts.length ? scripts.join(', ') : 'NENHUM'}`);
+            cy.task('log', `[diag] jQuery: ${temJquery} | $.fn.mask: ${temJquery ? typeof jq.fn?.mask : '-'} | $.fn.maskMoney: ${temJquery ? typeof jq.fn?.maskMoney : '-'}`);
+            cy.task('log', `[diag] scripts de máscara: ${scripts.length ? scripts.join(', ') : 'NENHUM'}`);
         });
 
-        // Dá tempo para o afterViewInit disparar antes de concluir a captura.
+        // Dá tempo para o afterViewInit disparar antes de fechar a captura.
         cy.wait(2000);
 
-        // Máscara aplicada de fato? Telefone de 10 dígitos deve virar (00) 0000-0000.
-        CertificadosPage.getCampoContato().clear({ force: true }).type('3133334444', { force: true }).blur({ force: true });
-        CertificadosPage.getCampoContato().invoke('val').then((valor) => {
-            cy.task('log', `[diag] valor do campo telefone após digitar 3133334444: "${valor}"`);
+        // O log precisa sair em um passo PRÓPRIO: comandos enfileirados dentro de um
+        // .then() só rodam depois do callback, então um expect que falha no mesmo
+        // callback aborta antes do cy.task e o diagnóstico se perde.
+        cy.then(() => {
+            porTela['cadastro /controle/certificados/create'] = [...errosCapturados];
+            for (const [tela, erros] of Object.entries(porTela)) {
+                const resumo = erros.map((e) => (achatar(e).match(/Identifier '(\w+)' has already been declared/) || [achatar(e)])[0]);
+                cy.task('log', `[diag] ${tela}: ${erros.length} erro(s) -> ${resumo.join(' | ') || 'nenhum'}`);
+            }
         });
 
         cy.window().then((win: any) => {
             const jq = win.jQuery || win.$;
-            const tipoMask = typeof jq === 'function' ? typeof jq.fn?.mask : 'sem jQuery';
-            const maskErrors = errosCapturados.filter((m) => /\.mask is not a function/i.test(m));
-            cy.task('log', `[diag] erros capturados: ${errosCapturados.length ? errosCapturados.join(' || ') : 'nenhum'}`);
+            const naTelaDeCadastro = porTela['cadastro /controle/certificados/create'] || [];
 
-            expect(maskErrors, 'nenhum TypeError de .mask no console').to.have.length(0);
-            expect(tipoMask, '$.fn.mask deve ser uma function (plugin jQuery Mask carregado)').to.eq('function');
+            // O defeito do card: máscara. Deve estar resolvido.
+            expect(naTelaDeCadastro.filter((m) => /\.mask is not a function/i.test(m)), 'TypeError de .mask').to.have.length(0);
+            expect(typeof jq.fn?.mask, '$.fn.mask (jquery.maskedinput carregado)').to.eq('function');
+            expect(typeof jq.fn?.maskMoney, '$.fn.maskMoney (jquery.maskMoney carregado)').to.eq('function');
+
+            // Caso de teste 1 do PR na íntegra: NENHUM erro de JS na tela de cadastro.
+            // Se falhar por 'has already been declared', é o bug PRÉ-EXISTENTE de bundle
+            // duplicado (não regressão do #27228) — o log acima mostra a atribuição por tela.
+            expect(naTelaDeCadastro.map(achatar), 'console da tela de cadastro sem erro de JavaScript').to.have.length(0);
         });
+    });
 
+    it('Caso 2 - Deve aplicar a máscara do Telefone para fixo (10 dígitos) e celular (11 dígitos)', () => {
+        Navbar.controle('Certificados');
+        CertificadosPage.abrirCadastro();
+
+        CertificadosPage.getCampoContato().clear({ force: true }).type('3133334444', { force: true }).blur({ force: true });
+        CertificadosPage.getCampoContato().invoke('val').then((v) => cy.task('log', `[diag] fixo 3133334444 -> "${v}"`));
         CertificadosPage.getCampoContato().invoke('val').should('eq', '(31) 3333-4444');
+
+        CertificadosPage.getCampoContato().clear({ force: true }).type('31988887777', { force: true }).blur({ force: true });
+        CertificadosPage.getCampoContato().invoke('val').then((v) => cy.task('log', `[diag] celular 31988887777 -> "${v}"`));
+        CertificadosPage.getCampoContato().invoke('val').should('eq', '(31) 98888-7777');
     });
 });

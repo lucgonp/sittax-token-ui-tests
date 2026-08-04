@@ -178,10 +178,6 @@ describe('Controle - Tela de Monitoramento (/controle/monitoramentos/nova-area)'
     describe('Validação de Divergência de Horários (Tela vs Relatório Exportado)', () => {
 
         beforeEach(() => {
-            Cypress.session.clearAllSavedSessions();
-            setupLoginIntercepts();
-            setupMonitoramentosIntercepts();
-            cy.logar(loginData.validUser.email, loginData.validUser.password);
             Navbar.controle('Monitoramento');
             MonitoramentoPage.fecharModalAbertoSeExistir();
         });

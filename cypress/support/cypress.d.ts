@@ -34,5 +34,11 @@ declare namespace Cypress {
      * @param nomeRelatorio - Nome do relatório conforme aparece no menu.
      */
     navegarParaRelatorio(nomeRelatorio: string): Chainable<void>;
+
+    /**
+     * Esconde o widget de chat da Movidesk (chrome de terceiro) que é `position: fixed`
+     * no canto inferior direito e cobre o botão primário da barra de ações.
+     */
+    esconderWidgetDeChat(): Chainable<void>;
   }
 }

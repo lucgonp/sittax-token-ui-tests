@@ -17,13 +17,11 @@ const knownAppErrors: RegExp[] = [
     // Erros de chunk/carregamento assíncrono comuns em SPAs
     /Loading chunk \d+ failed/i,
     /ChunkLoadError/i,
-    // BUG conhecido da APLICAÇÃO (cosmético): a tela /controle/certificados/create dispara
-    // `$(...).mask is not a function` — o plugin jQuery Mask não está carregado na página.
-    // COMPROVADO não-bloqueante: com o erro ignorado, o formulário renderiza e o upload
-    // persiste normalmente (POST /controle/certificados -> 204, certificado aparece na
-    // listagem). Ignoramos aqui para validar o fluxo de CRUD; o defeito deve ser reportado
-    // ao time do produto (máscara do campo telefone/CNPJ na tela de cadastro de certificado).
-    /\.mask is not a function/i,
+    // NÃO reintroduzir `/\.mask is not a function/` aqui: o bug #27228 foi corrigido
+    // (jquery.maskedinput + jquery.maskMoney passaram a ser carregados no layout da nova
+    // área) e validado no stage em 04/08/2026. Sem a regra, o erro volta a derrubar os
+    // testes — que é o comportamento desejado para detectar a regressão.
+    // Cobertura da correção: cypress/e2e/Controle/Certificados/certificados-console.cy.ts
 ];
 
 Cypress.on('uncaught:exception', (err) => {

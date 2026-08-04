@@ -146,6 +146,31 @@ Cypress.Commands.add('navegarParaUsuarios', () => {
 });
 
 /**
+ * Esconde o widget de chat da Movidesk.
+ *
+ * Ele é injetado por script de TERCEIRO, é `position: fixed` no canto inferior direito
+ * e fica sobre o botão primário da barra de ações (`.nd-action-bar__submit`), fazendo o
+ * Cypress reprovar o `should('be.visible')` com "being covered by
+ * `<div class="md-chat-widget-btn-title">`". Não é parte da tela sob teste.
+ *
+ * Injetamos CSS em vez de remover o nó: o widget se recria, e `display:none` no
+ * container sobrevive a isso. Precisa ser chamado DEPOIS de cada carregamento de
+ * página (o <style> morre na navegação).
+ */
+Cypress.Commands.add('esconderWidgetDeChat', () => {
+    cy.document().then((doc) => {
+        if (doc.querySelector('style[data-cypress="esconde-chat"]')) return;
+        const style = doc.createElement('style');
+        style.setAttribute('data-cypress', 'esconde-chat');
+        style.innerHTML = `
+            [class^="md-chat-widget"], [class*=" md-chat-widget"],
+            #md-app-widget, .md-chat-widget-container { display: none !important; }
+        `;
+        doc.head.appendChild(style);
+    });
+});
+
+/**
  * Navega até um relatório específico via menu da Navbar (Relatórios -> item).
  * Remove o atributo target="_blank" para manter a navegação no mesmo contexto do Cypress.
  */

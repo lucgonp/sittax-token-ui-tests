@@ -126,8 +126,18 @@ export const CertificadosPage = {
         }
     },
 
-    /** Clica no botão "Confirmar" para submeter o formulário */
+    /**
+     * Clica no botão "Confirmar" para submeter o formulário.
+     *
+     * O widget de chat da Movidesk (`.md-chat-widget-btn-title`, "Posso ajudar?") é
+     * `position: fixed` no canto inferior direito e fica EM CIMA do Confirmar da barra
+     * de ações (comprovado: o Cypress reprova o `be.visible` com "being covered by
+     * `<div class="md-chat-widget-btn-title">`"). É chrome de terceiro, não faz parte da
+     * tela em teste — escondemos antes de submeter. A sobreposição em si foi reportada
+     * ao time do produto (o usuário real também tem o botão coberto em 1920x1080).
+     */
     clicarConfirmar: () => {
+        cy.esconderWidgetDeChat();
         CertificadosPage.getBotaoConfirmar().should('be.visible').click({ force: true });
     },
 
@@ -176,6 +186,17 @@ export const CertificadosPage = {
             .should('be.visible')
             .focus()
             .type(`{selectall}${termo}{enter}`, { force: true });
+    },
+
+    /**
+     * Abre a tela de cadastro de certificado do jeito que o usuário faz:
+     * menu Controle > Certificados e clique em "Cadastrar certificado".
+     */
+    abrirCadastro: () => {
+        CertificadosPage.fecharModalNovidadesSeExistir();
+        CertificadosPage.getBotaoCadastrarCertificado().first().click({ force: true });
+        cy.url({ timeout: 20000 }).should('include', '/controle/certificados/create');
+        CertificadosPage.getCampoArquivo().should('exist');
     },
 
     /** Fecha o modal de novidades caso ele apareça */
