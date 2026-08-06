@@ -1,0 +1,22 @@
+{
+    "busca": {
+        "termoExistente": "User",
+        "termoInexistente": "TermoInexistente99999XYZ"
+    },
+    "textos": {
+        "tituloPagina": "Logs",
+        "placeholderBusca": "Digite um termo para buscar",
+        "erroCarregar": "Não foi possível carregar os dados. Tente novamente.",
+        "ordenadoPor": "Ordenado por:"
+    },
+    "colunas": [
+        "Data",
+        "Usuário",
+        "Tipo de Log"
+    ],
+    "ordenacao": [
+        "Data de criação",
+        "Tipo de log",
+        "Usuário"
+    ]
+}

@@ -156,6 +156,16 @@ Cypress.Commands.add('navegarParaAtualizacoes', () => {
 });
 
 /**
+ * Navega até a página de Logs via menu da Navbar (Utilitários -> Logs).
+ */
+Cypress.Commands.add('navegarParaLogs', () => {
+    Navbar.utilitarios('Logs');
+    cy.get('.nd-title-bar .h1, .nd-title-bar__title, .nd-title-bar__left [role="heading"], h1', { timeout: 15000 })
+        .should('be.visible')
+        .and('contain', 'Logs');
+});
+
+/**
  * Esconde o widget de chat da Movidesk.
  *
  * Ele é injetado por script de TERCEIRO, é `position: fixed` no canto inferior direito

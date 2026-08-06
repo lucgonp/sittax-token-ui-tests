@@ -122,6 +122,10 @@ export const ALIAS = {
     paginaAtualizacoes: 'paginaAtualizacoesRequest',
     listarAtualizacoes: 'listarAtualizacoesRequest',
     visualizarAtualizacao: 'visualizarAtualizacaoRequest',
+
+    // Logs (Utilitários)
+    paginaLogs: 'paginaLogsRequest',
+    listarLogs: 'listarLogsRequest',
 } as const;
 
 /**
@@ -356,4 +360,17 @@ export function setupAtualizacoesIntercepts(): void {
     cy.intercept('POST', '**/cadastros/novidades/nova-area/search*').as(ALIAS.listarAtualizacoes);
     // GET - Visualizar detalhes de uma novidade
     cy.intercept('GET', '**/cadastros/novidades/nova-area/*').as(ALIAS.visualizarAtualizacao);
+}
+
+/**
+ * Registra intercepts para as requisições da tela de Logs (/logs/nova-area).
+ *
+ * Tela somente-leitura: listagem com busca, ordenação e expansão inline.
+ * Não possui tela de detalhe separada nem operações de escrita.
+ */
+export function setupLogsIntercepts(): void {
+    // GET - Página HTML de logs
+    cy.intercept('GET', '**/logs/nova-area').as(ALIAS.paginaLogs);
+    // POST - Listagem, busca e ordenação
+    cy.intercept('POST', '**/logs/nova-area/search*').as(ALIAS.listarLogs);
 }
