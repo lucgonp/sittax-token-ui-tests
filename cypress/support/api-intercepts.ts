@@ -117,6 +117,11 @@ export const ALIAS = {
     relatorioProcuracoes: 'relatorioProcuracoesRequest',
     relatorioAcoes: 'relatorioAcoesRequest',
     buscarAcoes: 'buscarAcoesRequest',
+
+    // Atualizações / Novidades (Utilitários)
+    paginaAtualizacoes: 'paginaAtualizacoesRequest',
+    listarAtualizacoes: 'listarAtualizacoesRequest',
+    visualizarAtualizacao: 'visualizarAtualizacaoRequest',
 } as const;
 
 /**
@@ -338,6 +343,17 @@ export function setupRelatoriosIntercepts(): void {
     cy.intercept('POST', '**/acoes/nova-area/search*').as(ALIAS.buscarAcoes);
 }
 
-
-
-
+/**
+ * Registra intercepts para as requisições da tela de Atualizações / Novidades
+ * (/cadastros/novidades/nova-area).
+ *
+ * Tela somente-leitura: listagem com busca e visualização de detalhes.
+ */
+export function setupAtualizacoesIntercepts(): void {
+    // GET - Página HTML de atualizações
+    cy.intercept('GET', '**/cadastros/novidades/nova-area').as(ALIAS.paginaAtualizacoes);
+    // POST - Listagem, busca e paginação
+    cy.intercept('POST', '**/cadastros/novidades/nova-area/search*').as(ALIAS.listarAtualizacoes);
+    // GET - Visualizar detalhes de uma novidade
+    cy.intercept('GET', '**/cadastros/novidades/nova-area/*').as(ALIAS.visualizarAtualizacao);
+}
