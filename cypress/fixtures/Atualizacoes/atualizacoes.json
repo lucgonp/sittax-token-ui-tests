@@ -1,0 +1,20 @@
+{
+    "busca": {
+        "termoExistente": "AVISO",
+        "termoInexistente": "TermoInexistente99999XYZ"
+    },
+    "textos": {
+        "tituloPagina": "Atualizações",
+        "tituloDetalhe": "Visualizar novidade",
+        "tabelaVazia": "Nenhuma novidade encontrada.",
+        "placeholderBusca": "Buscar por título"
+    },
+    "colunas": [
+        "Título",
+        "Descrição",
+        "Tipo",
+        "Versão",
+        "Ambiente",
+        "Ações"
+    ]
+}

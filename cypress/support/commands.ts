@@ -146,6 +146,16 @@ Cypress.Commands.add('navegarParaUsuarios', () => {
 });
 
 /**
+ * Navega até a página de Atualizações via menu da Navbar (Utilitários -> Atualizações).
+ */
+Cypress.Commands.add('navegarParaAtualizacoes', () => {
+    Navbar.utilitarios('Atualizações');
+    cy.get('.nd-title-bar .h1, .nd-title-bar__title, .nd-title-bar__left [role="heading"], h1', { timeout: 15000 })
+        .should('be.visible')
+        .and('contain', 'Atualizações');
+});
+
+/**
  * Esconde o widget de chat da Movidesk.
  *
  * Ele é injetado por script de TERCEIRO, é `position: fixed` no canto inferior direito
