@@ -126,6 +126,13 @@ export const ALIAS = {
     // Logs (Utilitários)
     paginaLogs: 'paginaLogsRequest',
     listarLogs: 'listarLogsRequest',
+
+    // Perfis de Acesso (Utilitários)
+    paginaPerfisDeAcesso: 'paginaPerfisDeAcessoRequest',
+    listarPerfisDeAcesso: 'listarPerfisDeAcessoRequest',
+    criarPerfilDeAcesso: 'criarPerfilDeAcessoRequest',
+    editarPerfilDeAcesso: 'editarPerfilDeAcessoRequest',
+    permissoesPerfilDeAcesso: 'permissoesPerfilDeAcessoRequest',
 } as const;
 
 /**
@@ -373,4 +380,22 @@ export function setupLogsIntercepts(): void {
     cy.intercept('GET', '**/logs/nova-area').as(ALIAS.paginaLogs);
     // POST - Listagem, busca e ordenação
     cy.intercept('POST', '**/logs/nova-area/search*').as(ALIAS.listarLogs);
+}
+
+/**
+ * Registra intercepts para as requisições da tela de Perfis de Acesso (/roles/nova-area).
+ *
+ * Tela CRUD completa: listagem, busca, criação, edição e gerenciamento de permissões.
+ */
+export function setupPerfisDeAcessoIntercepts(): void {
+    // GET - Página HTML de perfis
+    cy.intercept('GET', '**/roles/nova-area').as(ALIAS.paginaPerfisDeAcesso);
+    // POST - Listagem, busca e paginação
+    cy.intercept('POST', '**/roles/nova-area/search*').as(ALIAS.listarPerfisDeAcesso);
+    // POST - Criar novo perfil
+    cy.intercept('POST', '**/roles/nova-area/store*').as(ALIAS.criarPerfilDeAcesso);
+    // PUT/POST - Editar perfil existente
+    cy.intercept('PUT', '**/roles/nova-area/*/update*').as(ALIAS.editarPerfilDeAcesso);
+    // GET - Página de permissões
+    cy.intercept('GET', '**/roles/nova-area/*/permissions*').as(ALIAS.permissoesPerfilDeAcesso);
 }
