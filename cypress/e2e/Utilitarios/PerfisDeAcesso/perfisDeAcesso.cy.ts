@@ -357,39 +357,40 @@ describe('Utilitários - Tela de Perfis de Acesso (/roles/nova-area) via Navega�
                 expect(interception.response?.statusCode).to.be.oneOf([200, 201, 302]);
             });
 
-            // Retorna para a listagem
+            // Retorna para a listagem.
+            // `include('/roles/nova-area')` sozinho é verdade em /create e /permissions
+            // também — só o `not.include` prova que o redirect aconteceu.
+            cy.url({ timeout: 15000 }).should('not.include', '/create');
             cy.url().should('include', '/roles/nova-area');
 
             // 2. Localizar perfil criado e gerenciar permissões
-            PerfisDeAcessoPage.buscarPorTermo(nomePerfil);
-            cy.wait(`@${ALIAS.listarPerfisDeAcesso}`, { timeout: 15000 });
-            
-            PerfisDeAcessoPage.getLinhasTabela().should('have.length', 1);
-            PerfisDeAcessoPage.getLinhasTabela().first().should('contain.text', nomePerfil);
-            
+            PerfisDeAcessoPage.buscarPerfilPorNome(nomePerfil);
+
             // Clica em Gerenciar Permissões
             PerfisDeAcessoPage.clicarGerenciarPermissoesNaLinha(0);
             cy.url().should('include', '/permissions');
 
             // Seleciona a seção "Cadastros"
             PerfisDeAcessoPage.clicarCheckboxSecao('Cadastros');
-            
-            // Atualiza permissões e aguarda redirecionamento
+
+            // Atualiza permissões e aguarda o redirecionamento para a listagem
             PerfisDeAcessoPage.getBotaoSubmit().click({ force: true });
+            cy.url({ timeout: 15000 }).should('not.include', '/permissions');
             cy.url().should('include', '/roles/nova-area');
 
-            // 3. Verificar contagem de permissões atualizada
-            PerfisDeAcessoPage.buscarPorTermo(nomePerfil);
-            cy.wait(`@${ALIAS.listarPerfisDeAcesso}`, { timeout: 15000 });
-            
-            PerfisDeAcessoPage.getLinhasTabela().first().find('td').eq(1).then(($td) => {
-                const text = $td.text().trim();
-                // Espera que não seja "-" pois adicionamos a permissão de Cadastros
-                expect(text).to.not.equal('-');
-                expect(text).to.contain('permiss');
-            });
+            // 3. Verificar contagem de permissões atualizada.
+            // A célula é localizada pela LINHA DO PERFIL (não pelo índice 0), e a
+            // asserção é retentável — se a listagem filtrada ainda não renderizou,
+            // o Cypress reconsulta em vez de fotografar a listagem antiga.
+            PerfisDeAcessoPage.buscarPerfilPorNome(nomePerfil);
 
-            // 4. Excluir o perfil cadastrado
+            PerfisDeAcessoPage.getCelulaPermissoesPorNome(nomePerfil)
+                .invoke('text')
+                .invoke('trim')
+                .should('not.equal', '-')
+                .and('contain', 'permiss');
+
+            // 4. Excluir o perfil cadastrado (a busca acima garante que a linha 0 é ele)
             PerfisDeAcessoPage.clicarExcluirNaLinha(0);
 
             // Valida o modal de confirmação

@@ -17,6 +17,8 @@
  *   - Formulário: input#role_name ("Nome do Perfil")
  *   - Permissões: seções Cadastros, Controle, Relatorios, Utilitarios, Analise
  */
+import { ALIAS } from '../../../support/api-intercepts';
+
 export const PerfisDeAcessoPage = {
 
     // ══════════════════════════════════════════════
@@ -41,6 +43,18 @@ export const PerfisDeAcessoPage = {
     /** Linhas da tabela */
     getLinhasTabela: () => cy.get('table.nd-table tbody tr', { timeout: 15000 }),
 
+    /**
+     * Linha da tabela que contém o nome informado.
+     * Diferente de `getLinhasTabela().eq(0)`, este seletor é retentável e só resolve
+     * quando a listagem filtrada já renderizou — evita ler a listagem anterior
+     * enquanto o POST /search ainda está em voo.
+     */
+    getLinhaPorNome: (nome: string) => cy.contains('table.nd-table tbody tr', nome, { timeout: 15000 }),
+
+    /** Célula "Permissões" (2ª coluna) da linha do perfil informado */
+    getCelulaPermissoesPorNome: (nome: string) =>
+        PerfisDeAcessoPage.getLinhaPorNome(nome).find('td').eq(1),
+
     /** Container de estado vazio */
     getTabelaVaziaContainer: () => cy.get('.nd-table-empty, .nd-table-container', { timeout: 15000 }),
 
@@ -57,42 +71,57 @@ export const PerfisDeAcessoPage = {
     //  AÇÕES NA TABELA (MENU AÇÕES)
     // ══════════════════════════════════════════════
 
+    /**
+     * Menu de ações aberto.
+     *
+     * CADA linha renderiza o seu próprio menu, oculto (`hidden`, `aria-hidden="true"`).
+     * Numa listagem de 10 linhas há 10 menus e 30 itens no DOM simultaneamente.
+     * O menu aberto é o único com a classe `nd-pop--open` (ganha `position: fixed`).
+     */
+    getMenuAcoesAberto: () => cy.get('.nd-table-action-menu.nd-pop--open', { timeout: 15000 }),
+
     /** Abre o menu "Ações" de uma linha específica */
     abrirMenuAcoesNaLinha: (rowIndex = 0) => {
         PerfisDeAcessoPage.getTabela().should('be.visible');
-        PerfisDeAcessoPage.getLinhasTabela().eq(rowIndex).within(() => {
-            cy.get('button.nd-actions-btn, button[data-dt-action-trigger]').should('be.visible').click({ force: true });
-        });
+        PerfisDeAcessoPage.getLinhasTabela().eq(rowIndex)
+            .find('button.nd-actions-btn, button[data-dt-action-trigger]')
+            .should('be.visible')
+            .click({ force: true });
+        // Só segue adiante quando o popover realmente abriu. Sem isto, um clique
+        // perdido (ex.: re-render da tabela) só apareceria passos depois.
+        PerfisDeAcessoPage.getMenuAcoesAberto().should('be.visible');
+    },
+
+    /**
+     * Clica numa ação do menu ABERTO, pela `data-dt-action-key`.
+     *
+     * Não busca o item pelo texto no body: como todas as linhas têm seu menu no DOM,
+     * `cy.get('a:contains("Editar")').first()` pegaria o item da PRIMEIRA linha,
+     * não o da linha aberta — e o `{ force: true }` clicaria mesmo estando oculto,
+     * navegando para o perfil errado sem que o teste percebesse.
+     */
+    clicarAcaoPorKey: (key: 'permissions' | 'edit' | 'delete') => {
+        PerfisDeAcessoPage.getMenuAcoesAberto()
+            .find(`[data-dt-action-key="${key}"]`)
+            .click({ force: true });
     },
 
     /** Clica na opção "Editar" do menu Ações */
     clicarEditarNaLinha: (rowIndex = 0) => {
         PerfisDeAcessoPage.abrirMenuAcoesNaLinha(rowIndex);
-        cy.get('body').then(($body) => {
-            if ($body.find('a.nd-table-action-menu__item:contains("Editar"), a:contains("Editar")').length > 0) {
-                cy.get('a.nd-table-action-menu__item:contains("Editar"), a:contains("Editar")').first().click({ force: true });
-            }
-        });
+        PerfisDeAcessoPage.clicarAcaoPorKey('edit');
     },
 
     /** Clica na opção "Gerenciar Permissões" do menu Ações */
     clicarGerenciarPermissoesNaLinha: (rowIndex = 0) => {
         PerfisDeAcessoPage.abrirMenuAcoesNaLinha(rowIndex);
-        cy.get('body').then(($body) => {
-            if ($body.find('a.nd-table-action-menu__item:contains("Gerenciar Permissões"), a:contains("Gerenciar Permissões")').length > 0) {
-                cy.get('a.nd-table-action-menu__item:contains("Gerenciar Permissões"), a:contains("Gerenciar Permissões")').first().click({ force: true });
-            }
-        });
+        PerfisDeAcessoPage.clicarAcaoPorKey('permissions');
     },
 
     /** Clica na opção "Excluir" do menu Ações */
     clicarExcluirNaLinha: (rowIndex = 0) => {
         PerfisDeAcessoPage.abrirMenuAcoesNaLinha(rowIndex);
-        cy.get('body').then(($body) => {
-            if ($body.find('button:contains("Excluir"), a:contains("Excluir")').length > 0) {
-                cy.get('button:contains("Excluir"), a:contains("Excluir")').first().click({ force: true });
-            }
-        });
+        PerfisDeAcessoPage.clicarAcaoPorKey('delete');
     },
 
     // ══════════════════════════════════════════════
@@ -157,6 +186,57 @@ export const PerfisDeAcessoPage = {
             .should('be.visible')
             .focus()
             .type(`{selectall}${termo}{enter}`, { force: true });
+    },
+
+    /**
+     * Busca um perfil pelo nome e só devolve o controle quando a listagem filtrada
+     * está na tela (1 linha, contendo o nome) E não há mais busca em voo.
+     *
+     * Duas armadilhas desta tela:
+     *
+     * 1. Não usa `cy.wait('@listarPerfisDeAcesso')`: o alias é global ao teste e o
+     *    `cy.wait` consome as interceptações em ordem, então uma busca tardia casaria
+     *    com uma request antiga e a asserção leria a listagem não filtrada.
+     *
+     * 2. Digitar dispara DUAS buscas: a do `{enter}` e uma atrasada, do debounce do
+     *    input. A resposta da segunda re-renderiza o `<tbody>` e derruba o menu de
+     *    ações aberto logo depois — era isso que fazia o clique em "Gerenciar
+     *    Permissões" cair no vazio no fluxo CRUD.
+     *
+     *    Esperar "nada em voo" NÃO resolve. Medição no stage digitando um nome longo:
+     *
+     *        +102ms RES  (1ª busca)
+     *        +356ms REQ
+     *        +472ms RES  ← nada em voo aqui, mas ainda falta um re-render
+     *        +751ms REQ  ← debounce dispara só agora
+     *        +861ms RES  ← este é o que derruba o menu
+     *
+     *    Por isso exigimos uma JANELA DE SILÊNCIO desde a última resposta, e não
+     *    apenas a fila vazia.
+     */
+    buscarPerfilPorNome: (nome: string) => {
+        const SILENCIO_MS = 1000;
+        const rede = { emVoo: 0, ultimaResposta: 0 };
+
+        // Mesmo nome de alias do setup: quem registra por último atende a request,
+        // então manter o nome preserva os `cy.wait('@listarPerfisDeAcesso')` do spec.
+        cy.intercept('POST', '**/roles/nova-area/search*', (req) => {
+            rede.emVoo++;
+            req.continue(() => {
+                rede.emVoo--;
+                rede.ultimaResposta = Date.now();
+            });
+        }).as(ALIAS.listarPerfisDeAcesso);
+
+        PerfisDeAcessoPage.buscarPorTermo(nome);
+        PerfisDeAcessoPage.getLinhasTabela().should('have.length', 1);
+        PerfisDeAcessoPage.getLinhasTabela().first().should('contain.text', nome);
+
+        cy.wrap(null, { log: false }).should(() => {
+            expect(rede.emVoo, 'buscas de perfis ainda em voo').to.equal(0);
+            expect(Date.now() - rede.ultimaResposta, 'ms desde a última resposta de busca')
+                .to.be.greaterThan(SILENCIO_MS);
+        });
     },
 
     /** Limpa o campo de busca */
