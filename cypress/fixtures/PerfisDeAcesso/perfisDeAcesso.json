@@ -1,0 +1,32 @@
+{
+    "busca": {
+        "termoExistente": "Basic",
+        "termoInexistente": "TermoInexistente99999XYZ"
+    },
+    "textos": {
+        "tituloPagina": "Perfis de Acesso",
+        "tituloCadastrar": "Cadastrar perfil de acesso",
+        "tituloEditar": "Editar perfil de acesso",
+        "tituloPermissoes": "Gerenciar permissões:",
+        "tabelaVazia": "Nenhum perfil de acesso encontrado.",
+        "placeholderBusca": "Digite um nome para buscar",
+        "botaoCadastrar": "Cadastrar perfil"
+    },
+    "colunas": [
+        "Nome",
+        "Permissões",
+        "Ações"
+    ],
+    "acoesMenu": [
+        "Gerenciar Permissões",
+        "Editar",
+        "Excluir"
+    ],
+    "secoesPermissoes": [
+        "Cadastros",
+        "Controle",
+        "Relatorios",
+        "Utilitarios",
+        "Analise"
+    ]
+}

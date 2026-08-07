@@ -166,6 +166,16 @@ Cypress.Commands.add('navegarParaLogs', () => {
 });
 
 /**
+ * Navega até a página de Perfis de Acesso via menu da Navbar (Utilitários -> Perfis de Acesso).
+ */
+Cypress.Commands.add('navegarParaPerfisDeAcesso', () => {
+    Navbar.utilitarios('Perfis de Acesso');
+    cy.get('.nd-title-bar .h1, .nd-title-bar__title, .nd-title-bar__left [role="heading"], h1', { timeout: 15000 })
+        .should('be.visible')
+        .and('contain', 'Perfis de Acesso');
+});
+
+/**
  * Esconde o widget de chat da Movidesk.
  *
  * Ele é injetado por script de TERCEIRO, é `position: fixed` no canto inferior direito

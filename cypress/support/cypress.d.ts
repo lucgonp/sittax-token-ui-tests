@@ -40,6 +40,11 @@ declare namespace Cypress {
     navegarParaLogs(): Chainable<void>;
 
     /**
+     * Navega até a página de Perfis de Acesso (Utilitários → Perfis de Acesso) via navbar.
+     */
+    navegarParaPerfisDeAcesso(): Chainable<void>;
+
+    /**
      * Navega até um relatório específico (Relatórios → item) via navbar.
      * @param nomeRelatorio - Nome do relatório conforme aparece no menu.
      */
