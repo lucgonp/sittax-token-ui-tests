@@ -87,15 +87,41 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
     // mas o POST de dados responde 401 e as páginas protegidas passam a redirecionar
     // p/ /login — quebrando a navegação pelo menu no meio da suíte. Detectamos pelo
     // status do POST do dashboard; se não for 200, limpamos a sessão e relogamos.
-    cy.intercept('POST', '**/dashboard/nova-area/search*').as('entrarSessao');
+    const recuperarSessao = () => {
+        cy.log('Sessão expirada detectada na entrada — refazendo login por UI');
+        Cypress.session.clearAllSavedSessions();
+        loginViaUI();
+        cy.visit('/dashboard');
+    };
+
+    const dashboard = { respondeu: false, status: 0 };
+    cy.intercept('POST', '**/dashboard/nova-area/search*', (req) => {
+        req.continue((res) => {
+            dashboard.respondeu = true;
+            dashboard.status = res.statusCode;
+        });
+    }).as('entrarSessao');
     cy.visit('/dashboard');
-    cy.wait('@entrarSessao', { timeout: 15000 }).then((interception) => {
-        if (!interception.response || interception.response.statusCode !== 200) {
-            cy.log('Sessão expirada detectada na entrada — refazendo login por UI');
-            Cypress.session.clearAllSavedSessions();
-            loginViaUI();
-            cy.visit('/dashboard');
+
+    // Há DOIS jeitos de a sessão estar morta, e só um deles dispara o POST:
+    //   a) sessão meio-viva  → /dashboard carrega, mas o POST de dados responde 401;
+    //   b) sessão morta      → /dashboard redireciona direto para /login e o POST
+    //                          NUNCA acontece.
+    // Um `cy.wait('@entrarSessao')` cobre só o caso (a); no caso (b) ele estoura por
+    // timeout e derruba o hook em vez de curar — levando junto o resto do spec.
+    cy.location('pathname', { timeout: 20000 }).then((rota) => {
+        if (rota.includes('/login')) {
+            recuperarSessao();
+            return;
         }
+        cy.wrap(null, { log: false, timeout: 20000 }).should(() => {
+            expect(dashboard.respondeu, 'POST de dados do dashboard').to.be.true;
+        });
+        cy.then(() => {
+            if (dashboard.status !== 200) {
+                recuperarSessao();
+            }
+        });
     });
     // Fecha o modal "Novidade!" ANTES de tocar na navbar — ele cobre a navbar e
     // faria o `should('be.visible')` (e a navegação pelo menu) falhar.
