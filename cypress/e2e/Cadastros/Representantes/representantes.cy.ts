@@ -24,6 +24,7 @@ describe('Cadastros — Representantes (/cadastros/representantes) - Issue #2803
     });
 
     beforeEach(() => {
+        Cypress.session.clearAllSavedSessions();
         setupLoginIntercepts();
         setupRepresentantesIntercepts();
         cy.logar(fixtureData.usuarioQA.email, fixtureData.usuarioQA.password);
@@ -147,7 +148,7 @@ describe('Cadastros — Representantes (/cadastros/representantes) - Issue #2803
             cy.wait(3000);
 
             // Validação HTML5 do browser ou mensagem do backend
-            cy.get('.modal.show, form').first().then(($container) => {
+            cy.get('#modalBasic').then(($container) => {
                 const emailInput = $container.find('input[name="email"], #email')[0] as HTMLInputElement;
                 const temValidacao = (emailInput && !emailInput.checkValidity()) ||
                     $container.find('.invalid-feedback, .text-danger, .alert-danger').length > 0;
@@ -171,7 +172,7 @@ describe('Cadastros — Representantes (/cadastros/representantes) - Issue #2803
             RepresentantesPage.fecharModal();
 
             // Modal deve estar fechado
-            cy.get('.modal.show').should('not.exist');
+            cy.get('#modalBasic').should('not.be.visible');
         });
 
         it('Regressão B: Manter o mesmo e-mail na edição deve salvar normalmente sem erro de duplicidade', () => {

@@ -16,16 +16,16 @@ export const RepresentantesPage = {
     //  LISTAGEM
     // ══════════════════════════════════════════════
 
-    /** Título "Representantes" da página — busca por texto contendo "Representantes" */
-    getTitulo: () => cy.contains('Representantes', { timeout: 15000 }),
+    /** Título "Representantes" da página */
+    getTitulo: () => cy.get('p.titlePage, .titlePage', { timeout: 15000 }),
 
     /** Campo de busca ("Pesquisar") */
-    getCampoBusca: () => cy.get('input[placeholder*="Pesquisar"], input[type="search"], input[id*="filter"]', { timeout: 15000 }).first(),
+    getCampoBusca: () => cy.get('#filter_razao_social', { timeout: 15000 }),
 
     /** Botão "+ Representantes" */
-    getBotaoCadastrar: () => cy.contains('button, a', '+ Representantes', { timeout: 15000 }),
+    getBotaoCadastrar: () => cy.get('.button a[onclick*="create"]', { timeout: 15000 }),
 
-    /** Tabela principal de representantes (qualquer table na página) */
+    /** Tabela principal de representantes */
     getTabela: () => cy.get('table', { timeout: 15000 }).first(),
 
     /** Linhas da tabela com dados */
@@ -37,16 +37,11 @@ export const RepresentantesPage = {
 
     /**
      * Clica no ícone de "Editar" (lápis) de uma linha.
-     * Os ícones são links <a> na última célula da linha.
-     * O primeiro ícone/link é normalmente "editar".
      */
     clicarEditarNaLinha: (rowIndex = 0) => {
         RepresentantesPage.getTabela().should('be.visible');
         RepresentantesPage.getLinhasTabela().eq(rowIndex).within(() => {
-            // Clica no primeiro ícone/link de ação (editar = lápis azul)
-            cy.get('a[href*="edit"], a.btn-table, a i.fa-edit, a i.fa-pencil, a i.bi-pencil, a svg, a[title*="Editar"], a[title*="editar"]', { timeout: 10000 })
-                .first()
-                .click({ force: true });
+            cy.get('.actions-buttons a', { timeout: 10000 }).eq(0).click({ force: true });
         });
     },
 
@@ -56,9 +51,7 @@ export const RepresentantesPage = {
     clicarExcluirNaLinha: (rowIndex = 0) => {
         RepresentantesPage.getTabela().should('be.visible');
         RepresentantesPage.getLinhasTabela().eq(rowIndex).within(() => {
-            cy.get('a[href*="delete"], a.btn-table-danger, a i.fa-trash, a i.bi-trash, a[title*="Excluir"], a[title*="excluir"]', { timeout: 10000 })
-                .first()
-                .click({ force: true });
+            cy.get('.actions-buttons a', { timeout: 10000 }).eq(1).click({ force: true });
         });
     },
 
@@ -67,37 +60,37 @@ export const RepresentantesPage = {
     //  Seletores genéricos — o modal pode ser #modalEditar ou qualquer .modal
     // ══════════════════════════════════════════════
 
-    /** Aguarda o formulário de edição ficar visível (modal ou página) */
+    /** Aguarda o formulário de edição ficar visível (modal) */
     aguardarFormularioAberto: () => {
-        cy.get('.modal.show, .modal.fade.show, form', { timeout: 15000 }).first().should('be.visible');
+        cy.get('#modalBasic', { timeout: 15000 }).should('be.visible');
     },
 
     /** Campo Razão Social */
-    getCampoRazaoSocial: () => cy.get('input[name="razao_social"], #razao_social', { timeout: 15000 }).first(),
+    getCampoRazaoSocial: () => cy.get('#modalBasic #razao_social', { timeout: 15000 }),
 
     /** Campo Nome Fantasia */
-    getCampoFantasia: () => cy.get('input[name="fantasia"], #fantasia', { timeout: 15000 }).first(),
+    getCampoFantasia: () => cy.get('#modalBasic #fantasia', { timeout: 15000 }),
 
     /** Campo Nome do Contato */
-    getCampoContato: () => cy.get('input[name="contato"], #contato', { timeout: 15000 }).first(),
+    getCampoContato: () => cy.get('#modalBasic #contato', { timeout: 15000 }),
 
     /** Campo Telefone */
-    getCampoTelefone: () => cy.get('input[name="telefone"], #telefone', { timeout: 15000 }).first(),
+    getCampoTelefone: () => cy.get('#modalBasic #telefone', { timeout: 15000 }),
 
     /** Campo E-mail */
-    getCampoEmail: () => cy.get('input[name="email"], #email', { timeout: 15000 }).first(),
+    getCampoEmail: () => cy.get('#modalBasic #email', { timeout: 15000 }),
 
     /** Campo CNPJ */
-    getCampoCNPJ: () => cy.get('input[name="cnpj"], #cnpj', { timeout: 15000 }).first(),
+    getCampoCNPJ: () => cy.get('#modalBasic input[name="cnpj"]', { timeout: 15000 }),
 
     /** Campo Senha (presente apenas no cadastro) */
-    getCampoSenha: () => cy.get('input[name="senha"], #senha, input[type="password"]', { timeout: 5000 }),
+    getCampoSenha: () => cy.get('#modalBasic input[name="senha"], #modalBasic #senha', { timeout: 5000 }),
 
     /** Botão Salvar / Atualizar no formulário */
-    getBotaoSalvar: () => cy.get('.modal.show button[type="submit"], .modal.show button.button-send, .modal.show button:contains("Salvar"), .modal.show button:contains("Atualizar"), form button[type="submit"]', { timeout: 15000 }).first(),
+    getBotaoSalvar: () => cy.get('#modalBasic button.button-send, #modalBasic button[type="submit"]', { timeout: 15000 }).first(),
 
     /** Botão Fechar / Cancelar modal */
-    getBotaoFechar: () => cy.get('.modal.show .btn-close, .modal.show [data-bs-dismiss="modal"], .modal.show .close, .modal.show button:contains("Cancelar")', { timeout: 15000 }).first(),
+    getBotaoFechar: () => cy.get('#modalBasic .btn-close, #modalBasic [data-bs-dismiss="modal"]', { timeout: 15000 }).first(),
 
     // ══════════════════════════════════════════════
     //  MÉTODOS AUXILIARES E ASSERÇÕES
@@ -105,7 +98,7 @@ export const RepresentantesPage = {
 
     /** Valida que o campo senha NÃO existe no formulário de edição */
     validarCampoSenhaAusenteNaEdicao: () => {
-        cy.get('.modal.show, form').first().within(() => {
+        cy.get('#modalBasic').within(() => {
             cy.get('input[name="senha"], #senha, input[type="password"]').should('not.exist');
         });
     },
@@ -143,6 +136,12 @@ export const RepresentantesPage = {
     /** Fecha o modal aberto */
     fecharModal: () => {
         RepresentantesPage.getBotaoFechar().click({ force: true });
-        cy.get('.modal.show').should('not.exist');
+        cy.wait(500);
+        cy.get('body').then(($body) => {
+            if ($body.find('#modalBasic.show').length > 0) {
+                RepresentantesPage.getBotaoFechar().click({ force: true });
+            }
+        });
+        cy.get('#modalBasic').should('not.be.visible');
     },
 };
