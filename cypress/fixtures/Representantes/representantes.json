@@ -1,0 +1,23 @@
+{
+  "usuarioQA": {
+    "email": "qa@sittax.com.br",
+    "password": "sittax123"
+  },
+  "novoRepresentante": {
+    "cnpj": "00000000000191",
+    "razaoSocial": "Representante Teste QA Auto",
+    "fantasia": "Sittax QA Teste",
+    "contato": "Contato QA Auto",
+    "telefone": "11999999999",
+    "email": "representante.qa@sittax-teste.com",
+    "senha": "sittax123"
+  },
+  "editRepresentante": {
+    "razaoSocial": "Representante Editado QA Auto",
+    "fantasia": "Sittax QA Editado",
+    "contato": "Contato Editado QA",
+    "telefone": "11988888888"
+  },
+  "invalidEmail": "email-invalido-sem-arroba",
+  "duplicateEmail": "qa@sittax.com.br"
+}

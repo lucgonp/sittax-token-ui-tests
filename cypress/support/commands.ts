@@ -202,6 +202,17 @@ Cypress.Commands.add('navegarParaPerfisDeAcesso', () => {
 });
 
 /**
+ * Navega até a página de Representantes via menu da Navbar (Cadastros -> Representantes) ou visita direta.
+ */
+Cypress.Commands.add('navegarParaRepresentantes', () => {
+    Navbar.cadastros('Representantes');
+    cy.url({ timeout: 15000 }).should('include', '/cadastros/representantes');
+    cy.get('.nd-title-bar .h1, .nd-title-bar__title, .nd-title-bar__left [role="heading"], h1', { timeout: 15000 })
+        .should('be.visible')
+        .and('contain', 'Representantes');
+});
+
+/**
  * Esconde o widget de chat da Movidesk.
  *
  * Ele é injetado por script de TERCEIRO, é `position: fixed` no canto inferior direito

@@ -45,6 +45,11 @@ declare namespace Cypress {
     navegarParaPerfisDeAcesso(): Chainable<void>;
 
     /**
+     * Navega até a página de Representantes (Cadastros → Representantes) via navbar.
+     */
+    navegarParaRepresentantes(): Chainable<void>;
+
+    /**
      * Navega até um relatório específico (Relatórios → item) via navbar.
      * @param nomeRelatorio - Nome do relatório conforme aparece no menu.
      */

@@ -133,6 +133,15 @@ export const ALIAS = {
     criarPerfilDeAcesso: 'criarPerfilDeAcessoRequest',
     editarPerfilDeAcesso: 'editarPerfilDeAcessoRequest',
     permissoesPerfilDeAcesso: 'permissoesPerfilDeAcessoRequest',
+
+    // Representantes (Cadastros)
+    paginaRepresentantes: 'paginaRepresentantesRequest',
+    listarRepresentantes: 'listarRepresentantesRequest',
+    criarRepresentante: 'criarRepresentanteRequest',
+    salvarRepresentante: 'salvarRepresentanteRequest',
+    editarRepresentante: 'editarRepresentanteRequest',
+    atualizarRepresentante: 'atualizarRepresentanteRequest',
+    excluirRepresentante: 'excluirRepresentanteRequest',
 } as const;
 
 /**
@@ -399,3 +408,24 @@ export function setupPerfisDeAcessoIntercepts(): void {
     // GET - Página de permissões
     cy.intercept('GET', '**/roles/nova-area/*/permissions*').as(ALIAS.permissoesPerfilDeAcesso);
 }
+
+/**
+ * Registra intercepts para as requisições da tela de Representantes (/cadastros/representantes).
+ */
+export function setupRepresentantesIntercepts(): void {
+    // GET - Página HTML de representantes
+    cy.intercept('GET', '**/cadastros/representantes*').as(ALIAS.paginaRepresentantes);
+    // POST - Listagem, busca e paginação
+    cy.intercept('POST', '**/cadastros/representantes*').as(ALIAS.listarRepresentantes);
+    // POST - Criar novo representante
+    cy.intercept('POST', '**/cadastros/representantes/store*').as(ALIAS.salvarRepresentante);
+    cy.intercept('POST', '**/cadastros/representantes/create*').as(ALIAS.salvarRepresentante);
+    cy.intercept('POST', '**/cadastros/representantes').as(ALIAS.salvarRepresentante);
+    // GET - Carregar representante para edição
+    cy.intercept('GET', '**/cadastros/representantes/*/edit*').as(ALIAS.editarRepresentante);
+    // PUT/POST - Atualizar representante existente
+    cy.intercept({ url: '**/cadastros/representantes/*' }).as(ALIAS.atualizarRepresentante);
+    // DELETE - Excluir representante
+    cy.intercept('DELETE', '**/cadastros/representantes/*').as(ALIAS.excluirRepresentante);
+}
+
