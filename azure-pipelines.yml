@@ -54,10 +54,13 @@ stages:
     displayName: 'Cypress (sequencial — sessão única)'
     timeoutInMinutes: 90
     steps:
-    - task: NodeTool@0
+    # UseNode@1 no lugar do NodeTool@0: a v0 está deprecada e o próprio agente avisa no
+    # "Initialize job" ("Please use UseNodeV1 as a replacement"). O input muda de
+    # versionSpec para version.
+    - task: UseNode@1
       displayName: 'Install Node.js'
       inputs:
-        versionSpec: '20.x'
+        version: '20.x'
 
     # Cache das dependências npm + do binário do Cypress (acelera reruns e deixa
     # o `cypress verify` confiável).
@@ -104,6 +107,21 @@ stages:
         failTaskOnFailedTests: true
         failTaskOnMissingResultsFile: true
         publishRunAttachments: true
+      condition: always()
+
+    # O Cypress só grava screenshot quando um teste falha. Num run 100% verde a pasta não
+    # existe, o PublishBuildArtifacts abaixo erra por "Not found PathtoPublish" e — mesmo
+    # com continueOnError — registra errorCount na task, o que sobe para Job/Phase/Stage e
+    # deixa o build em "partiallySucceeded", o triângulo amarelo. Era um aviso causado pelo
+    # próprio sucesso: quanto mais verde o run, mais garantido o alerta. Publicar artefato
+    # vazio é permitido; caminho inexistente não. Mesmo padrão do Sittax.Ui.Test
+    # ("Pre-criar pastas de evidencia").
+    #
+    # Não uso `condition: failed()` na publicação porque, com retry, um teste que falha e
+    # passa na segunda tentativa deixa screenshot num run que termina verde — é justamente
+    # a evidência de flakiness que interessa guardar.
+    - script: mkdir -p cypress/screenshots cypress/videos
+      displayName: 'Pré-criar pastas de evidência'
       condition: always()
 
     - task: PublishBuildArtifacts@1
