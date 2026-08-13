@@ -22,7 +22,9 @@ export const RepUsuariosPage = {
     // ══════════════════════════════════════════════
 
     /** Campo de busca na tela de Usuários (/users) — Suporta layouts legado (#filter_razao_social) e novo (#nd-usuarios-search) */
-    getCampoBuscaUsers: () => cy.get('#filter_razao_social, #nd-usuarios-search, input[placeholder*="Pesquisar"], input[type="search"], input[name="filter_razao_social"], input[name="search"]', { timeout: 15000 }).first(),
+    // O campo de busca de /users e de /rep/users é `filter_name` — não `filter_razao_social`.
+    // Sem ele na lista, o `.first()` caía em outro input e a busca nunca era aplicada.
+    getCampoBuscaUsers: () => cy.get('#filter_name, input[name="filter_name"], #filter_razao_social, #nd-usuarios-search, input[placeholder*="Pesquisar"], input[type="search"], input[name="search"]', { timeout: 15000 }).first(),
 
     /** Tabela de usuários em /users */
     getTabelaUsers: () => cy.get('table', { timeout: 15000 }).first(),
@@ -60,7 +62,7 @@ export const RepUsuariosPage = {
     // ══════════════════════════════════════════════
 
     /** Tabela de usuários do sistema (/rep/users) */
-    getTabelaRepUsers: () => cy.get('table', { timeout: 15000 }).first(),
+    getTabelaRepUsers: () => cy.get('table, .nd-table, .table, .table-responsive, [role="grid"]', { timeout: 25000 }).first(),
 
     /** Botão de cadastrar gestor em /rep/users */
     getBotaoCadastrarRepUser: () => cy.get('a.nd-btn-primary[href*="/rep/users/create"], a[href*="/rep/users/create"], a:contains("Cadastrar gestor"), a.button, .button a', { timeout: 15000 }).first(),
@@ -105,7 +107,7 @@ export const RepUsuariosPage = {
     getCampoSenha: () => cy.get('#password, input[name="password"], #senha', { timeout: 5000 }),
 
     /** Select Perfil (#role_id) */
-    getSelectPerfil: () => cy.get('#role_id, select[name="role_id"], select[name="perfil"]', { timeout: 15000 }).first(),
+    getSelectPerfil: () => cy.get('#role_id, select[name*="role"], select[name*="perfil"], select', { timeout: 15000 }).first(),
 
     /** Botão Salvar (button.button-send, button[type="submit"]) */
     getBotaoSalvar: () => cy.get('button.button-send, button.nd-action-bar__submit, button[type="submit"], input[type="submit"]', { timeout: 15000 }).first(),
@@ -121,10 +123,12 @@ export const RepUsuariosPage = {
             if ($m.find('#password, input[name="password"]').length > 0) {
                 RepUsuariosPage.getCampoSenha().clear({ force: true }).type(senha, { force: true });
             }
+            if ($m.find('#role_id, select[name*="role"], select[name*="perfil"]').length > 0) {
+                cy.get('#role_id, select[name*="role"], select[name*="perfil"]').first().select('2', { force: true });
+            } else if ($m.find('select').length > 0) {
+                cy.get('select').first().select('2', { force: true });
+            }
         });
-
-        // Perfil 2 = Gestor
-        RepUsuariosPage.getSelectPerfil().select('2', { force: true });
     },
 
     /** Preenche alteração de dados do Gestor (edição) */
@@ -133,10 +137,21 @@ export const RepUsuariosPage = {
         RepUsuariosPage.getCampoNome().should('be.visible').clear({ force: true }).type(novoNome, { force: true });
     },
 
-    /** Submete o formulário clicando em Salvar com ocultação de chat */
+    /** Submete o formulário chamando submit() na form para garantir validação e envio */
     submeterFormulario: () => {
         cy.esconderWidgetDeChat();
-        RepUsuariosPage.getBotaoSalvar().should('be.visible').click({ force: true });
+        cy.get('body').then(($body) => {
+            const $form = $body.find('form').first();
+            if ($form.length > 0) {
+                const $btnSubmit = $form.find('button[type="submit"], input[type="submit"], button.button-send, .button-send').first();
+                if ($btnSubmit.length > 0) {
+                    cy.wrap($btnSubmit).click({ force: true });
+                }
+                cy.wrap($form).submit();
+            } else {
+                RepUsuariosPage.getBotaoSalvar().should('be.visible').click({ force: true });
+            }
+        });
     },
 
     /** Clica ou navega para a edição da linha do Gestor */
@@ -162,6 +177,13 @@ export const RepUsuariosPage = {
 
     /** Valida que um Gestor (por nome ou e-mail) é exibido na tabela de /rep/users */
     validarGestorNaTabela: (textoEsperado: string) => {
+        cy.get('body').then(($body) => {
+            const $search = $body.find('#filter_razao_social, #nd-usuarios-search, input[placeholder*="Pesquisar"], input[type="search"]').first();
+            if ($search.length > 0) {
+                cy.wrap($search).clear({ force: true }).type(`${textoEsperado}{enter}`, { force: true });
+                cy.wait(1000);
+            }
+        });
         RepUsuariosPage.getTabelaRepUsers().should('be.visible').and('contain.text', textoEsperado);
     }
 };

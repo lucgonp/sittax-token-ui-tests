@@ -452,8 +452,11 @@ export function setupImpersonateERepUsersIntercepts(): void {
     cy.intercept('GET', '**/users').as(ALIAS.paginaUsers);
     cy.intercept('GET', '**/users?*').as(ALIAS.paginaUsers);
 
-    // POST/GET - Busca em /users
-    cy.intercept({ url: '**/users*search*' }).as(ALIAS.buscarUsers);
+    // POST - Busca em /users. A rota real é POST /users/search: o padrão antigo
+    // (`**/users*search*`) NÃO casava, porque `*` não cruza `/` no minimatch — o alias
+    // nunca disparava e o cy.wait estourava em timeout.
+    cy.intercept('POST', '**/users/search').as(ALIAS.buscarUsers);
+    cy.intercept('POST', '**/users/search?*').as(ALIAS.buscarUsers);
     cy.intercept('POST', '**/users/search-sistema*').as(ALIAS.buscarUsers);
 
     // GET - Impersonate (Assumir controle)
@@ -462,8 +465,11 @@ export function setupImpersonateERepUsersIntercepts(): void {
     // GET - Página /rep/users (Usuário do sistema)
     cy.intercept('GET', '**/rep/users*').as(ALIAS.paginaRepUsers);
 
-    // POST/GET - Listagem/busca em /rep/users
-    cy.intercept('POST', '**/rep/users/search*').as(ALIAS.listarRepUsers);
+    // POST - Listagem/busca em /rep/users. Registrado DEPOIS do de /users/search de
+    // propósito: em rotas concorrentes o último intercept registrado vence, e
+    // `**/users/search` também casaria com `/rep/users/search`.
+    cy.intercept('POST', '**/rep/users/search').as(ALIAS.listarRepUsers);
+    cy.intercept('POST', '**/rep/users/search?*').as(ALIAS.listarRepUsers);
 
     // GET - Tela de cadastro em /rep/users
     cy.intercept('GET', '**/rep/users/create*').as(ALIAS.criarRepUser);
