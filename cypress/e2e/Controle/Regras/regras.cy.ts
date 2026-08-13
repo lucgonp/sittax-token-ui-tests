@@ -92,7 +92,7 @@ describe('Controle - Tela de Regras (/controle/regras) via Interface do Navegado
                     RegrasPage.clicarEditarNaLinha(0);
                     cy.wait(`@${ALIAS.editarRegra}`, { timeout: 10000 }).then((interception) => {
                         if (interception && interception.response) {
-                            expect(interception.response.statusCode).to.be.oneOf([200, 304, 400, 404, 500]);
+                            expect(interception.response.statusCode).to.be.oneOf([200, 304]);
                         }
                     });
                 } else {
@@ -115,7 +115,7 @@ describe('Controle - Tela de Regras (/controle/regras) via Interface do Navegado
 
                     cy.wait(`@${ALIAS.excluirRegra}`, { timeout: 10000 }).then((interception) => {
                         if (interception && interception.response) {
-                            expect(interception.response.statusCode).to.be.oneOf([200, 204, 302, 400, 404, 500]);
+                            expect(interception.response.statusCode).to.be.oneOf([200, 204, 302]);
                         }
                     });
                 } else {
@@ -151,7 +151,7 @@ describe('Controle - Tela de Regras (/controle/regras) via Interface do Navegado
 
             cy.wait(`@${ALIAS.salvarRegra}`, { timeout: 15000 }).then((interception) => {
                 if (interception && interception.response) {
-                    expect(interception.response.statusCode).to.be.oneOf([200, 201, 302, 400, 422, 500]);
+                    expect(interception.response.statusCode).to.be.oneOf([200, 201, 302]);
                 }
             });
         });
@@ -176,7 +176,7 @@ describe('Controle - Tela de Regras (/controle/regras) via Interface do Navegado
 
                     cy.wait(`@${ALIAS.atualizarRegra}`, { timeout: 15000 }).then((interception) => {
                         if (interception && interception.response) {
-                            expect(interception.response.statusCode).to.be.oneOf([200, 201, 302, 400, 422, 500]);
+                            expect(interception.response.statusCode).to.be.oneOf([200, 201, 302]);
                         }
                     });
                 } else {
@@ -198,7 +198,7 @@ describe('Controle - Tela de Regras (/controle/regras) via Interface do Navegado
 
                     cy.wait(`@${ALIAS.excluirRegra}`, { timeout: 10000 }).then((interception) => {
                         if (interception && interception.response) {
-                            expect(interception.response.statusCode).to.be.oneOf([200, 204, 302, 400, 404, 500]);
+                            expect(interception.response.statusCode).to.be.oneOf([200, 204, 302]);
                         }
                     });
                 } else {
@@ -215,110 +215,34 @@ describe('Controle - Tela de Regras (/controle/regras) via Interface do Navegado
     });
 
     // ══════════════════════════════════════════════
-    //  5. PAGINAÇÃO AJAX DE AGENTES NA EDIÇÃO E ORDENAÇÃO DETERMINÍSTICA
+    //  5. BUSCA DE AGENTES NO FORMULÁRIO DE EDIÇÃO
     // ══════════════════════════════════════════════
+    //
+    // A paginação AJAX de agentes e a ordenação determinística (#27945) saíram daqui
+    // para regras-paginacao-agentes.cy.ts, que aponta para uma regra com volume de
+    // agentes suficiente para paginar e AFIRMA essa pré-condição. Os testes que estavam
+    // neste bloco olhavam o DOM antes da carga AJAX terminar e caíam no `else` com
+    // cy.log, ficando verdes sem exercitar a paginação — exatamente o cenário do bug.
 
-    describe('Validação da Edição de Regras com Paginação AJAX de Agentes (GrupoController@searchAgentes)', () => {
-
-        it('Deve carregar a tela de edição, paginar agentes via AJAX e validar a ordem determinística entre páginas', () => {
-            cy.get('body').then(($body) => {
-                if ($body.find('table.nd-table tbody tr').length > 0) {
-                    RegrasPage.clicarEditarNaLinha(0);
-                    cy.wait(`@${ALIAS.editarRegra}`, { timeout: 15000 });
-
-                    RegrasPage.getFormulario().should('be.visible');
-                    RegrasPage.getTabelaAgentesForm().should('be.visible');
-
-                    // Captura os nomes da primeira página de agentes
-                    cy.get('body').then(($b) => {
-                        if ($b.find('button[aria-label="Próxima página"]:not([disabled])').length > 0) {
-                            let primeiraPaginaAgentes: string[] = [];
-
-                            RegrasPage.getLinhasAgentesTabelaForm().each(($row) => {
-                                primeiraPaginaAgentes.push($row.text().trim());
-                            });
-
-                            // Avança para a página 2 via AJAX (GrupoController@searchAgentes)
-                            RegrasPage.avancarPaginaAgentesForm();
-
-                            cy.wait(`@${ALIAS.buscarAgentes}`, { timeout: 15000 }).then((interception) => {
-                                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
-                            });
-
-                            // Valida que a página 2 exibe agentes e não sobrepõe com a página 1 (Ordem determinística)
-                            RegrasPage.getLinhasAgentesTabelaForm().should('be.visible').then(($rowsPagina2) => {
-                                const segundaPaginaPrimeiroAgente = $rowsPagina2.eq(0).text().trim();
-                                cy.log(`Primeiro agente da página 2: ${segundaPaginaPrimeiroAgente}`);
-                                expect(primeiraPaginaAgentes).to.not.include(segundaPaginaPrimeiroAgente);
-                            });
-
-                            // Seleciona um agente na página 2 e submete a edição
-                            cy.get('section[data-dt-root="nd-regra-agentes"] input[name="usuarios[]"]').first().check({ force: true });
-                            RegrasPage.submeterFormulario();
-
-                            cy.wait(`@${ALIAS.atualizarRegra}`, { timeout: 15000 }).then((interception) => {
-                                if (interception && interception.response) {
-                                    expect(interception.response.statusCode).to.be.oneOf([200, 201, 302]);
-                                }
-                            });
-                        } else {
-                            cy.log('Ambiente possui menos de 1 página de agentes; paginação desabilitada.');
-                        }
-                    });
-                } else {
-                    cy.log('Sem regras disponíveis para edição');
-                }
-            });
-        });
-
-        it('Deve alterar a quantidade de registros por página na tabela de agentes e interceptar requisição AJAX', () => {
-            cy.get('body').then(($body) => {
-                if ($body.find('table.nd-table tbody tr').length > 0) {
-                    RegrasPage.clicarEditarNaLinha(0);
-                    cy.wait(`@${ALIAS.editarRegra}`, { timeout: 15000 });
-
-                    cy.get('body').then(($b) => {
-                        if ($b.find('select.nd-pagination__select').length > 0) {
-                            RegrasPage.alterarRegistrosPorPaginaAgentesForm('35');
-
-                            cy.wait(`@${ALIAS.buscarAgentes}`, { timeout: 15000 }).then((interception) => {
-                                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
-                            });
-
-                            RegrasPage.getTabelaAgentesForm().should('be.visible');
-                        } else {
-                            cy.log('Select de registros por página não encontrado');
-                        }
-                    });
-                } else {
-                    cy.log('Sem regras disponíveis para edição');
-                }
-            });
-        });
+    describe('Validação da Busca de Agentes no Formulário de Edição (GrupoController@searchAgentes)', () => {
 
         it('Deve pesquisar um agente pelo nome no formulário de edição e interceptar requisição AJAX', () => {
-            cy.get('body').then(($body) => {
-                if ($body.find('table.nd-table tbody tr').length > 0) {
-                    RegrasPage.clicarEditarNaLinha(0);
-                    cy.wait(`@${ALIAS.editarRegra}`, { timeout: 15000 });
+            RegrasPage.getLinhasTabela().should('have.length.greaterThan', 0);
 
-                    cy.get('body').then(($b) => {
-                        if ($b.find('#nd-regra-agentes-search').length > 0) {
-                            RegrasPage.buscarAgenteNoFormulario('a');
+            RegrasPage.clicarEditarNaLinha(0);
+            cy.wait(`@${ALIAS.editarRegra}`, { timeout: 15000 })
+                .its('response.statusCode').should('be.oneOf', [200, 304]);
 
-                            cy.wait(`@${ALIAS.buscarAgentes}`, { timeout: 15000 }).then((interception) => {
-                                expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
-                            });
+            // a tabela de agentes vem por AJAX depois do load da página
+            cy.wait(`@${ALIAS.buscarAgentes}`, { timeout: 30000 })
+                .its('response.statusCode').should('be.oneOf', [200, 304]);
+            RegrasPage.aguardarTabelaAgentesCarregada();
 
-                            RegrasPage.getTabelaAgentesForm().should('be.visible');
-                        } else {
-                            cy.log('Campo de busca de agentes no formulário não encontrado');
-                        }
-                    });
-                } else {
-                    cy.log('Sem regras disponíveis para edição');
-                }
-            });
+            RegrasPage.buscarAgenteNoFormulario('a');
+
+            cy.wait(`@${ALIAS.buscarAgentes}`, { timeout: 30000 })
+                .its('response.statusCode').should('be.oneOf', [200, 304]);
+            RegrasPage.getTabelaAgentesForm().should('be.visible');
         });
     });
 });
