@@ -321,6 +321,10 @@ export function setupRegrasIntercepts(): void {
     cy.intercept('POST', '**/controle/regras').as(ALIAS.salvarRegra);
     // GET - Carregar regra para edição
     cy.intercept('GET', '**/controle/regras/*/edit*').as(ALIAS.editarRegra);
+    // POST - Busca de agentes na edição/cadastro de regra (AJAX)
+    cy.intercept('POST', '**/search-agentes*').as(ALIAS.buscarAgentes);
+    // POST - Busca de certificados na edição/cadastro de regra (AJAX)
+    cy.intercept('POST', '**/search-certificados*').as(ALIAS.buscarCertificados);
     // PUT/POST - Atualizar regra existente
     cy.intercept({ url: '**/controle/regras/*' }).as(ALIAS.atualizarRegra);
     // DELETE/POST - Excluir regra

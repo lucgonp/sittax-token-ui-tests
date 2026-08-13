@@ -81,10 +81,22 @@ export const RegrasPage = {
     getToggleAtivo: () => cy.get('#ativo, input[name="ativo"]', { timeout: 15000 }),
 
     /** Tabela de Agentes do formulário */
-    getTabelaAgentesForm: () => cy.get('section[data-dt-root="nd-regra-agentes"] table.nd-table', { timeout: 15000 }),
+    getTabelaAgentesForm: () => cy.get('section[data-dt-root="nd-regra-agentes"] table.nd-table, section[data-dt-root="nd-regra-agentes"] .nd-table', { timeout: 15000 }),
 
     /** Campo de busca de agentes no formulário */
     getCampoBuscaAgentesForm: () => cy.get('#nd-regra-agentes-search', { timeout: 15000 }),
+
+    /** Botão de próxima página da tabela de agentes no formulário */
+    getBotaoProximaPaginaAgentes: () => cy.get('button[aria-label="Próxima página"]', { timeout: 15000 }),
+
+    /** Botão de página anterior da tabela de agentes no formulário */
+    getBotaoPaginaAnteriorAgentes: () => cy.get('button[aria-label="Página anterior"]', { timeout: 15000 }),
+
+    /** Select de quantidade de resultados por página na tabela de agentes */
+    getSelectResultadosPorPaginaAgentes: () => cy.get('select.nd-pagination__select', { timeout: 15000 }),
+
+    /** Linhas da tabela de agentes do formulário */
+    getLinhasAgentesTabelaForm: () => cy.get('section[data-dt-root="nd-regra-agentes"] table.nd-table tbody tr', { timeout: 15000 }),
 
     /** Botão "Cancelar" */
     getBotaoCancelar: () => cy.get('a.nd-action-bar__cancel, button:contains("Cancelar")', { timeout: 15000 }),
@@ -118,6 +130,30 @@ export const RegrasPage = {
     /** Clica em "Cadastrar regra" na tela inicial */
     clicarCadastrarRegra: () => {
         RegrasPage.getBotaoCadastrarRegra().should('be.visible').click({ force: true });
+    },
+
+    /** Avança a página na tabela de agentes dentro do formulário */
+    avancarPaginaAgentesForm: () => {
+        RegrasPage.getBotaoProximaPaginaAgentes().should('be.visible').click({ force: true });
+    },
+
+    /** Volta a página na tabela de agentes dentro do formulário */
+    voltarPaginaAgentesForm: () => {
+        RegrasPage.getBotaoPaginaAnteriorAgentes().should('be.visible').click({ force: true });
+    },
+
+    /** Altera a quantidade de registros por página na tabela de agentes */
+    alterarRegistrosPorPaginaAgentesForm: (qtd: string) => {
+        RegrasPage.getSelectResultadosPorPaginaAgentes().should('be.visible').select(qtd, { force: true });
+    },
+
+    /** Busca agente pelo nome/apelido dentro do formulário de regra */
+    buscarAgenteNoFormulario: (termo: string) => {
+        RegrasPage.getCampoBuscaAgentesForm()
+            .should('be.visible')
+            .focus()
+            .clear()
+            .type(`${termo}{enter}`, { force: true });
     },
 
     /** Fecha qualquer modal/dialog se estiver aberto */
