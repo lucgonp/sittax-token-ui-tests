@@ -188,9 +188,13 @@ describe('Cadastros — Representantes, Assumir Controle em /users e gestor em /
             expect(Object.keys(rotas).sort(), 'ações publicadas na linha do gestor')
                 .to.deep.equal(['detail', 'impersonate', 'updateAgentPassword']);
 
-            // o menu não traz edição — se passar a trazer, o assert acima quebra de propósito
-            cy.get(`[data-row*="${email}"] button[data-dt-action-trigger]`).click({ force: true });
-            cy.get('[data-dt-action-panel]').should('be.visible').within(() => {
+            // O menu não traz edição — se passar a trazer, o assert acima quebra de propósito.
+            // Ancorar no painel DA LINHA: `[data-dt-action-panel]` sozinho casa um por linha
+            // (10 na página) e o cy.within() estoura com "can only be called on a single
+            // element". Não precisa abrir o menu: os itens já estão no DOM.
+            cy.get(`[data-row*="${email}"]`).should('have.length', 1);
+            cy.get(`[data-row*="${email}"] button[data-dt-action-trigger]`).should('be.visible');
+            cy.get(`[data-row*="${email}"] [data-dt-action-panel]`).should('have.length', 1).within(() => {
                 cy.get('[data-dt-action-key="detail"]').should('exist');
                 cy.get('[data-dt-action-key="novaSenha"]').should('exist');
                 cy.get('[data-dt-action-key="impersonate"]').should('exist');
