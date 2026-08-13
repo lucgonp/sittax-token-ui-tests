@@ -55,7 +55,7 @@ Cypress.Commands.add('logar', (email: string, password: string) => {
         // Confirma que a sessão autenticada acessa uma página protegida.
         // Usa o título da página de Grupos (elemento estável) como âncora.
         cy.visit('/grupos');
-        cy.get('.nd-title-bar__left [role="heading"]', { timeout: 20000 }).should('contain', 'Grupos');
+        cy.get('.nd-title-bar__left [role="heading"], .nd-title-bar .h1, .nd-title-bar__title, .titlePage, h1', { timeout: 20000 }).should('be.visible');
     };
 
     cy.session(

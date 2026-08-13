@@ -142,6 +142,17 @@ export const ALIAS = {
     editarRepresentante: 'editarRepresentanteRequest',
     atualizarRepresentante: 'atualizarRepresentanteRequest',
     excluirRepresentante: 'excluirRepresentanteRequest',
+
+    // Users & Impersonate & Rep Users (Cadastros)
+    paginaUsers: 'paginaUsersRequest',
+    buscarUsers: 'buscarUsersRequest',
+    impersonateUser: 'impersonateUserRequest',
+    paginaRepUsers: 'paginaRepUsersRequest',
+    listarRepUsers: 'listarRepUsersRequest',
+    criarRepUser: 'criarRepUserRequest',
+    salvarRepUser: 'salvarRepUserRequest',
+    editarRepUser: 'editarRepUserRequest',
+    atualizarRepUser: 'atualizarRepUserRequest',
 } as const;
 
 /**
@@ -432,4 +443,47 @@ export function setupRepresentantesIntercepts(): void {
     // DELETE - Excluir representante
     cy.intercept('DELETE', '**/cadastros/representantes/*').as(ALIAS.excluirRepresentante);
 }
+
+/**
+ * Registra intercepts para as requisições de /users, Impersonate (/users/impersonate/*) e /rep/users.
+ */
+export function setupImpersonateERepUsersIntercepts(): void {
+    // GET - Página de usuários (/users)
+    cy.intercept('GET', '**/users').as(ALIAS.paginaUsers);
+    cy.intercept('GET', '**/users?*').as(ALIAS.paginaUsers);
+
+    // POST/GET - Busca em /users
+    cy.intercept({ url: '**/users*search*' }).as(ALIAS.buscarUsers);
+    cy.intercept('POST', '**/users/search-sistema*').as(ALIAS.buscarUsers);
+
+    // GET - Impersonate (Assumir controle)
+    cy.intercept('GET', '**/users/impersonate/*').as(ALIAS.impersonateUser);
+
+    // GET - Página /rep/users (Usuário do sistema)
+    cy.intercept('GET', '**/rep/users*').as(ALIAS.paginaRepUsers);
+
+    // POST/GET - Listagem/busca em /rep/users
+    cy.intercept('POST', '**/rep/users/search*').as(ALIAS.listarRepUsers);
+
+    // GET - Tela de cadastro em /rep/users
+    cy.intercept('GET', '**/rep/users/create*').as(ALIAS.criarRepUser);
+    cy.intercept('GET', '**/users/create*').as(ALIAS.criarRepUser);
+
+    // POST - Salvar gestor em /rep/users (submete POST em /users)
+    cy.intercept('POST', /\/users(\?.*)?$/).as(ALIAS.salvarRepUser);
+    cy.intercept('POST', '**/rep/users/create*').as(ALIAS.salvarRepUser);
+    cy.intercept('POST', '**/rep/users/store*').as(ALIAS.salvarRepUser);
+    cy.intercept('POST', '**/rep/users').as(ALIAS.salvarRepUser);
+
+    // GET - Tela de edição em /rep/users
+    cy.intercept('GET', '**/rep/users/*/edit*').as(ALIAS.editarRepUser);
+    cy.intercept('GET', '**/users/*/edit*').as(ALIAS.editarRepUser);
+
+    // PUT/POST - Atualizar gestor em /rep/users (submete POST/PUT em /users/:id)
+    cy.intercept('POST', /\/users\/\d+(\?.*)?$/).as(ALIAS.atualizarRepUser);
+    cy.intercept('PUT', /\/users\/\d+(\?.*)?$/).as(ALIAS.atualizarRepUser);
+    cy.intercept({ url: '**/rep/users/*' }).as(ALIAS.atualizarRepUser);
+    cy.intercept({ url: '**/rep/users/*/update*' }).as(ALIAS.atualizarRepUser);
+}
+
 
