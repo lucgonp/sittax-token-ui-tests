@@ -209,6 +209,55 @@ export const CertificadosPage = {
     },
 
     /** Fecha modal ou drawer aberto na tela se existir */
+    // ══════════════════════════════════════════════
+    //  PAGINAÇÃO AJAX DA LISTAGEM (#27945)
+    //  A correção do #27945 aplicou o mesmo desempate por id na listagem de
+    //  certificados, que ordena por updated_at desc — campo que empata com
+    //  facilidade (importação em lote grava vários no mesmo instante) e, sem
+    //  desempate, faz as páginas se sobreporem igual ao caso dos agentes.
+    // ══════════════════════════════════════════════
+
+    /** Container AJAX da tabela de certificados */
+    CONTAINER: '[data-dt-container="nd-cert"]',
+
+    /** Espera a tabela terminar de carregar */
+    aguardarTabelaCarregada: () => {
+        cy.get(CertificadosPage.CONTAINER, { timeout: 30000 }).should('not.have.class', 'is-loading');
+        cy.get('table.nd-table tbody tr', { timeout: 30000 }).should('have.length.greaterThan', 0);
+    },
+
+    /**
+     * Espera a troca de página acontecer de fato no DOM.
+     * Só esperar o AJAX deixa uma janela em que a tabela ainda mostra as linhas
+     * anteriores — ler ali acusaria sobreposição sem defeito existir.
+     */
+    aguardarTrocaDePagina: (primeiroIdDaPaginaAnterior: string) => {
+        cy.get('table.nd-table tbody input[name="certificados[]"]', { timeout: 30000 })
+            .first()
+            .should('not.have.value', primeiroIdDaPaginaAnterior);
+    },
+
+    /** Total informado pela paginação ("30 resultados") */
+    getTotalCertificados: () =>
+        cy.get('.nd-pagination__count', { timeout: 15000 })
+            .invoke('text')
+            .then((t) => Number((t.match(/\d+/) || ['0'])[0])),
+
+    /** Ids dos certificados da página atual (value do checkbox = id da linha) */
+    getIdsDaPagina: () =>
+        cy.get('table.nd-table tbody input[name="certificados[]"]', { timeout: 15000 })
+            .then(($i) => $i.map((_, el) => (el as HTMLInputElement).value).get()),
+
+    /** Valor atual do select de resultados por página */
+    getResultadosPorPagina: () =>
+        cy.get('select.nd-pagination__select').invoke('val').then((v) => Number(v)),
+
+    /** Botão "Próxima página" da listagem */
+    getProximaPagina: () => cy.get('button[aria-label="Próxima página"]', { timeout: 15000 }),
+
+    /** Botão "Página anterior" da listagem */
+    getPaginaAnterior: () => cy.get('button[aria-label="Página anterior"]', { timeout: 15000 }),
+
     fecharModalAbertoSeExistir: () => {
         cy.get('body').then(($body) => {
             if ($body.find('.fly-dialog, .fly-cnpj-confirm, [role="dialog"], .modal, .nd-drawer').length > 0) {
